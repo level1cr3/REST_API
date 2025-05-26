@@ -1,0 +1,310 @@
+=== ASP.NET Core Web API Notes ===
+
+## Basics
+- What is API?
+> API stands for 'Application Programming Interface'.
+> It is a way for two software programs to talk to each other.
+
+> Simple Example:
+> When you use a weather app, it asks a weather API to get the latest weather data.
+> The API sends the data back, and the app shows it to you.
+
+> 👉 Think of an API like a menu in a restaurant:
+> You order from the menu (API request), and the kitchen (server) gives you your food (response).
+
+> In short:
+> API = A set of rules that lets software talk to other software.
+
+
+- What is REST?
+> REST is an acronym stading for 'REpresentational State Transfer'.
+> It as an architectural style for building distributed hypermedia system.
+> It was first discribed my roy fielding all the way back in 2000.
+
+> Now days it is a default way of building API for distributed system.
+> Or one of main 3 other 2 being graphQL, grpc
+
+> Like any other architecture REST has some constraints and guildlines. 
+> And following these guidlines and contrainsts make the service restful
+
+> So ultimately what REST API is a Web API conforming to (following) REST architectural style.
+
+- What are REST rules, guidlines and constraints
+> There are 6 constrainst or guiding principal that make rest architecture REST
+
+1 Uniform interface.
+2 Stateless.
+3 Cacheable
+4 Client Server
+5 Layered System
+6 Code on demand (optional)
+
+1 Uniform interface : 
+> All it means is there is clear defined interface between client and the server. 
+> It is ultimatly here to simplify and decouple the architecture allowing each system to evolve independely
+
+> This constraint is more clearly defined by it's 4 sub-constrainnts or sub guiding principals
+
+1.1 Identification of resources
+> There should be a clear way to identitfy. a resource between client and server
+> we can think of resource as an entity. If your endpoint is returning movies then movie is your resource
+> If is is returning customers then customer is resource. 
+> We can think of it as a model. But ultimately it is item in question.
+
+1.2 Manipulation of resources through representations
+> These resources (items) should have uniform representations in the server responses.
+> And client should be able to use thoes representations to modify the state in the server.
+
+1.3 Self-descriptive messages
+> Each resource representation should carry all the information it needs for the message to be processed.
+
+1.4 Hypermedia as the engine of application state (HATEOAS)
+> Means client should only have intial URL. Then the server through the responses will tell the client how to call different things
+
+> It dictates that a client should interact with a REST API through hypermedia links provided by the server, rather than relying on hardcoded URLs or knowledge of the API structure.
+
+> ex : if we need to create,update, delete the user in the system. Then all we need to is call the intial
+> url and then find my way through the endpoint which is described in that response.
+
+> In mordern API this particular guding principal is heavly debateable. and Omitted by most API's
+
+
+2 Stateless (Important)
+> When a client send a request to the server. That message conatins everything there is to know by the server to process that request.
+> The server cannot rely on existing state that it might have gotten in the previous request. 
+
+> The reason why it is important is because of how the system scales.
+> ex : if we have 4 instances of our api and we have a load balancer. user hits the load-blancer and 
+> the load blancer might go to any of these instances. and they don't share the states in between them.
+> so it is important for request that we send to server to be stateless and contain all the information
+> the server would need to process that request. 
+
+> for that reason if there is any state that needs to kept by the client. Needs to be kept on the client.
+
+
+3 Cacheable
+> Server should implicitly or explicitly let the client know. If it can cache that response or not and for how long it can cache it.
+> However it is up to the client to bypass that if the client wants to.
+> This is done using the http standerdize header.
+
+4 Client Server
+>  Client and server have to agree on the contract between them. Client and server can evolve independently 
+> As long as contracts are agreed on and they don't change
+> ex: server can later on be split into 2 servers and so on.
+
+5 Layered System 
+> Client can't know if it is directly connected to end server or some load balancer. It should not
+> matter to client where that request goes.
+
+6 Code on demand (optional)
+> It is nerver used most of the time. It is just artifact of the time.
+> Server can send the code (like javascript) at the client to run.
+
+
+- Resource naming and routing
+> Resource is the item we are storing. the model. ex : customer, movie, order etc
+> Routing has to do with the 'Enpoints' we are calling to get into thoes resources
+
+> main thing to know about rest is when for example you want to access movies and all the movies. 
+> we would go to /movies endpoint and not the /movie. 'Plural very important'.
+
+> access all movies
+> GET /movies
+> access specific movie
+> GET /movies/1
+> ratings for the specific movie
+> GET /movies/1/ratings
+> because ratings in itself isn't a resource that have the id. If you want to individual rating then
+> sure we could have the id. But here we are getting all the ratings of a movie.
+> then we need to go to the movies find the movie and get its ratings.
+
+> another thing about mordern rest api is. If you want to get your own ratings that you have given to many movies. or singular movie.
+> GET /ratings/me
+
+> all of these request are 'GET' request.
+
+> Now if we want to rate a movie.
+
+> not do this.
+> GET /movies/1/rate
+
+> Instead this is what we will do.
+> POST /movies/1/ratings
+> we will do POST OR PUT depending wheather we are creating a rating or updating one.
+> PUT /movies/1/ratings
+
+> To delete your rating
+> DELETE /movies/1/ratings
+
+
+> It is important we do not use the verb in the Endpoint like below
+> DELETE /movies/1/rates  (changing ratings to rates)
+
+> HTTP verbs are what describes what should happen in it's resource
+
+- What each HTTP verb is used for ?
+> When we want to specify the intent about an action we want to make. We are going to use HTTP verb to describe that we are not going to change the name of the resource to point to verb or an action
+> we are not gonna say 'Add item to basket', 'Create Order'. Instead we will use verbs to imply that
+
+> HTTP Verbs are meaningful.
+
+> POST - "Create" If we want to create a resource we will use post. ex : we want to create a customer in the system post, add item to an basket post, create an order use Post
+
+> GET - "Retrieve" Get a resource ex : give me a customer or give me all the customers
+
+> PUT - "Complete update" of a resource. So i'm sending full update of a resource full new representation of the resource in my request body and a server has to do a complete update of that resource.
+
+> PATCH - "Partial update" However patch has fallen out of favour. Just based on how complicated it is as a mechanism. and we actually choose to work around this patch limitation and ultimately "use PUT everywhere"
+
+> DELETE - "Delete" It is used to delete a resource. ex : delete a customer from my system, remove an item from a basket.
+
+> There 2 furthure sub categorization of these request
+
+1 Safe - "GET" is considered a safe method because it doesn't mutate any state about the resource. If we get all customers, or a customer nothing about the customer changes.
+
+> All the other actions are not safe because they can change the state of the resource.
+
+- How to use HTTP status codes to let the client know what exactly happend in the server side 
+> when client sends the request to the server. The server can use the HTTP Status codes in that response to let the client know what happend.
+
+> examples :
+
+> GET
+    > Single resource (/items/1) : 200 status code and item represented in the response body, 404 when the item was not found.
+    > Collection resource (/items) : 200 even if we get no item in the response or empty collection.
+
+> when using post request to create an item in the system. Server can let us know by using the status code like 201 and location header in response. which will point to this new resource that was created
+> we won't do the post request in the single resource so this is not applicable.
+
+> POST
+    > Single resource (/items/1) : NA (we don't have the id of resource before it is created)
+    > Collection resource (/items) : 201 (location header) , 202 (accpeted) because you might have asyc request that needs to be processed. Ex: want to create background job that runs for 5 minutes.
+
+> PUT
+    > Single resource (/items/1) : 200, 204 (no content) specify that item was updated, 404 (not found) the item you are trying to update.
+    > Collection resource (/items) : 405 (method not allowed). Because it is not recommended to update bunch of items together it is a bad practice.
+
+> DELETE
+    > Single resource (/items/1) : 200, 404
+    > Collection resource (/items) : 405 (method not allowed). If you want to delete all the items in the collection you can allow it "But it is dangerous and should not be allowed"       
+
+
+
+- Status codes range (check mdn resource for more)
+> Informational responses (100 – 199)
+> Successful responses (200 – 299)
+> Redirection messages (300 – 399)
+> Client error responses (400 – 499)
+> Server error responses (500 – 599)
+
+
+- How a REST API can response ?
+> REST API both response and request body are now days JSON (JavaScript Object Notation)
+> example : {"Name":"jeff"}
+
+> Techincally you could also have the <xml> as a response.
+> In fact client can mention in the request header as : Accept: application/xml. Then it is upto the server to return the response in the form the client wants
+
+- What is idempotency ?
+> No matter how many times you process a specific request. 'The result will always be same on the server'.
+> In simple terms, no matter how many times you repeat an idempotent operation, the result stays the same— "as long as the inputs don’t change."
+
+> Idempotency refers to a property of an operation where executing it multiple times has the same effect as executing it once.
+> This concept is crucial in web development, REST APIs, distributed systems, etc., to ensure reliability and predictability, especially when dealing with retries due to network failures.
+
+
+
+> POST    - Not idempotent   : Submits data, often causes a new resource to be created or an action to occur. Repeating it may create duplicates.
+> GET     - idempotent and 'safe' (no side effect or mutation) : Retrieves data. Repeating a GET request returns the same resource without side effects.
+> PUT     - idempotent       : Updates a resource at a specific URL. Repeating it with the same data has no further effect.
+> DELETE  - idempotent       : Deletes a resource. Repeating it still leaves the resource deleted.
+> HEAD    - idempotent       : Same as GET but without the response body. No side effects.
+> OPTIONS - idempotent       : Describes the communication options. No side effects.
+> TRACE   - idempotent       : Echoes back the request 
+
+- ✅ Idempotency vs. Freshness (or Consistency)
+> When we say GET is idempotent, it doesn't mean the returned data will never change.
+
+> Idempotency means:
+    > Performing the request multiple times doesn't cause additional side effects on the server.
+
+> It does not guarantee that:
+    > The response will be identical every time.
+
+> The change in the response is due to external state changes—not due to your repeated GET requests.    
+
+
+
+- HATEOAS Hypermedia as the engine of application state
+> when returning a result. you will return links to other things or even specific operations.
+
+
+> examples :
+{
+    "Id" : 10,
+    "Name" : "Admin",
+	"LocationId" : 1500,
+	"ManagerId" : 1700,
+	"links": [ 
+		"href" : "10/employees",
+		"rel" : "employees",
+		"type" : "GET"
+	]
+}
+
+> example 2 :
+
+{
+    "account" : {
+		"account_number" : "Admin",
+		"balance" : {
+			"currency" : "usd",
+			"value" : 100.00
+		}
+	}, 
+	"links": [ 
+		"deposites" : "/accounts/1234/deposites",
+		"withdrawals" : "/accounts/1234/withdrawals",
+		"transfers" : "/accounts/1234/transfers",
+		"close-requests" : "/accounts/1234/close-requests",
+	]
+}
+
+> this simplified version example 2 It is kinda used today. it is new version but old one is no longer used
+> Generally it is not recommended. why is because as you dynamically create links to other things. you bloat your contract with a lot of data. 
+> If you want to build high performance application. You don't want to carry with you things you don't really need in that response.
+> API's now have documentaions that contain these extra informations
+
+
+- Different types of errors ?
+> Rest API have 2 category of things going wrong.
+1 Error : When client is actually sending the invalid data. There is nothing nessarry wrong with our server, It's client sending something that cannot be processed by server. in that case we return 400.
+
+2 Fault : This means there is something wrong with the server. in that case we return 400. This means request was valid but something on server happend and server could not proccess it. It can be anything like db not running etc.
+
+
+
+
+
+
+
+
+
+
+
+
+## Database Setup
+- Connection string format: ...
+- EF Core commands: ...
+
+## Controller Patterns
+- [HttpGet] attribute examples
+- Error handling approach: ...
+
+## Authentication
+- JWT setup steps: ...
+- Key configuration settings: ...
+
+## Common Issues & Solutions
+- CORS problem: ...
+- Database migration error: ...
