@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GettingStarted", "GettingStarted", "{5070F990-908B-4789-A86E-0E884AAAD6F6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Helpers", "Helpers", "{50FCB2E1-5E67-427C-9650-C9D394D827CD}"
+	ProjectSection(SolutionItems) = preProject
+		ASP NET Core Web API Notes.txt = ASP NET Core Web API Notes.txt
+		Course.postman_collection.json = Course.postman_collection.json
+		movies.json = movies.json
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Movies.Api", "Movies.Api\Movies.Api.csproj", "{13CD424E-29FB-4569-B3B6-17AB880C5F9A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Movies.Application", "Movies.Application\Movies.Application.csproj", "{95653E56-3B22-4E90-B8A4-8ECAC48318C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Movies.Contracts", "Movies.Contracts\Movies.Contracts.csproj", "{F42F842D-80EB-44E9-9AAE-3FA1D8913677}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{13CD424E-29FB-4569-B3B6-17AB880C5F9A} = {5070F990-908B-4789-A86E-0E884AAAD6F6}
+		{95653E56-3B22-4E90-B8A4-8ECAC48318C5} = {5070F990-908B-4789-A86E-0E884AAAD6F6}
+		{F42F842D-80EB-44E9-9AAE-3FA1D8913677} = {5070F990-908B-4789-A86E-0E884AAAD6F6}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{13CD424E-29FB-4569-B3B6-17AB880C5F9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13CD424E-29FB-4569-B3B6-17AB880C5F9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13CD424E-29FB-4569-B3B6-17AB880C5F9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13CD424E-29FB-4569-B3B6-17AB880C5F9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95653E56-3B22-4E90-B8A4-8ECAC48318C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95653E56-3B22-4E90-B8A4-8ECAC48318C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95653E56-3B22-4E90-B8A4-8ECAC48318C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95653E56-3B22-4E90-B8A4-8ECAC48318C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F42F842D-80EB-44E9-9AAE-3FA1D8913677}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F42F842D-80EB-44E9-9AAE-3FA1D8913677}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F42F842D-80EB-44E9-9AAE-3FA1D8913677}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F42F842D-80EB-44E9-9AAE-3FA1D8913677}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
