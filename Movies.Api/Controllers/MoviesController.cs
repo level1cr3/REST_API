@@ -18,10 +18,14 @@ public class MoviesController(IMovieRepository movieRepository) : ControllerBase
         var isCreated = await movieRepository.CreateAsync(movie);
         var responseObj = movie.MapToMovieResponse();
         
-        return isCreated ? Created($"/{ApiEndpoints.Movies.Create}/{responseObj.Id}",responseObj) : BadRequest();
+        // return isCreated ? Created($"/{ApiEndpoints.Movies.Create}/{responseObj.Id}",responseObj) : BadRequest();
         
         // for created method. it returns url in the response location header like this. and the object.
         // Location : /api/movies/01971155-a6a1-734f-88e7-f1718c848b49
+
+        return isCreated ? CreatedAtAction(nameof(Get),new {id = responseObj.Id}, responseObj) : BadRequest();
+        // use CreatedAtAction() it is better then Created in terms of giving value to location header.
+        // provides us with full contextual location of the item.
     }
     
     [HttpGet(ApiEndpoints.Movies.Get)]
