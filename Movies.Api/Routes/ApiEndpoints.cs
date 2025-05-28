@@ -11,6 +11,12 @@ public static class ApiEndpoints
         private const string Base = $"{ApiBase}/Movies";
 
         public const string Create = Base;
+        
+        public const string Get = $"{Base}/{{id:guid}}"; // using double {{ to escape one. this is route parameter. using constraint so only guid can be used.
+
+        public const string GetAll = Base;
+
+
     }
 
 }

@@ -31,6 +31,12 @@ public static class ContractMapping
         };
     }
 
+    public static MoviesResponse MapToMoviesResponse(this IEnumerable<Movie> movies)
+    {
+        var moviesResponseList = movies.Select(MapToMovieResponse);
+
+        return new MoviesResponse { Items = moviesResponseList };
+    }
 
 }
 
