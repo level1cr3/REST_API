@@ -5,11 +5,11 @@ namespace Movies.Application.Repositories;
 public class MovieRepository : IMovieRepository
 {
     private readonly List<Movie> _movies = []; // for now this will act as in memory db.
-    
+
     public Task<Movie?> GetByIdAsync(Guid id)
     {
         var movie = _movies.FirstOrDefault(m => m.Id == id);
-        return Task.FromResult(movie); 
+        return Task.FromResult(movie);
     }
 
     public Task<IEnumerable<Movie>> GetAllAsync()
@@ -43,5 +43,4 @@ public class MovieRepository : IMovieRepository
         var removeCount = _movies.RemoveAll(m => m.Id == id);
         return Task.FromResult(removeCount > 0);
     }
-    
 }
