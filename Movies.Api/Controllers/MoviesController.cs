@@ -70,4 +70,40 @@ public class MoviesController(IMovieRepository movieRepository) : ControllerBase
 
         return isUpdated ? Ok(updatedMovie.MapToMovieResponse()) : NotFound();
     }
+    
+    [HttpDelete(ApiEndpoints.Movies.Delete)]
+    public async Task<IActionResult> Delete([FromRoute] Guid id)
+    {
+        var isDeleted = await movieRepository.DeleteByIdAsync(id);
+        return isDeleted ? Ok() : NotFound();
+    }
+    
+    /*
+     Why partial updates are bad ?
+        Reason it is complex to build the PATCH request. and process the PATCH request.
+        It is way simpler for the client to use GET request to get the Item they want to update. make changes in that and use PUT to update it.
+    
+        HTTPPATCH has fallen out of favour.
+        
+        This is what general PATCH request would look like
+        [
+            {
+                "op" : "replace",
+                "path" : "/name",
+                "value" : "Green house"
+            },
+            {
+                "op" : "add",
+                "path" : "/bedroom",
+                "value" : {
+                    "name" : "bedroom",
+                    "color" : "blue"
+                }
+                
+            }
+        ]
+        
+        It is way complicated to create in client and also complicated to process in server side. Hence we won't use PATCH
+    */ 
+
 }
