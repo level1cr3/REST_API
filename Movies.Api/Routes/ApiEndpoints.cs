@@ -14,7 +14,7 @@ public static class ApiEndpoints
         public const string Create = Base;
 
         public const string
-            Get = $"{Base}/{{id:guid}}"; // using double {{ to escape one. this is route parameter. using constraint so only guid can be used.
+            Get = $"{Base}/{{idOrSlug}}"; // using double {{ to escape one. this is route parameter. using constraint so only guid can be used.
 
         public const string GetAll = Base;
         public const string Update = $"{Base}/{{id:guid}}";

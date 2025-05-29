@@ -23,15 +23,17 @@ public class MoviesController(IMovieRepository movieRepository) : ControllerBase
         // for created method. it returns url in the response location header like this. and the object.
         // Location : /api/movies/01971155-a6a1-734f-88e7-f1718c848b49
 
-        return isCreated ? CreatedAtAction(nameof(Get), new { id = responseObj.Id }, responseObj) : BadRequest();
+        return isCreated ? CreatedAtAction(nameof(Get), new { idOrSlug = responseObj.Id }, responseObj) : BadRequest();
         // use CreatedAtAction() it is better then Created in terms of giving value to location header.
         // provides us with full contextual location of the item.
     }
 
     [HttpGet(ApiEndpoints.Movies.Get)]
-    public async Task<IActionResult> Get([FromRoute] Guid id)
+    public async Task<IActionResult> Get([FromRoute] string idOrSlug)
     {
-        var movie = await movieRepository.GetByIdAsync(id);
+        var movie = Guid.TryParse(idOrSlug, out var id)
+            ? await movieRepository.GetByIdAsync(id)
+            : await movieRepository.GetBySlugAsync(idOrSlug);
 
         if (movie is null)
         {
@@ -70,21 +72,21 @@ public class MoviesController(IMovieRepository movieRepository) : ControllerBase
 
         return isUpdated ? Ok(updatedMovie.MapToMovieResponse()) : NotFound();
     }
-    
+
     [HttpDelete(ApiEndpoints.Movies.Delete)]
     public async Task<IActionResult> Delete([FromRoute] Guid id)
     {
         var isDeleted = await movieRepository.DeleteByIdAsync(id);
         return isDeleted ? Ok() : NotFound();
     }
-    
+
     /*
      Why partial updates are bad ?
         Reason it is complex to build the PATCH request. and process the PATCH request.
         It is way simpler for the client to use GET request to get the Item they want to update. make changes in that and use PUT to update it.
-    
+
         HTTPPATCH has fallen out of favour.
-        
+
         This is what general PATCH request would look like
         [
             {
@@ -99,11 +101,10 @@ public class MoviesController(IMovieRepository movieRepository) : ControllerBase
                     "name" : "bedroom",
                     "color" : "blue"
                 }
-                
+
             }
         ]
-        
-        It is way complicated to create in client and also complicated to process in server side. Hence we won't use PATCH
-    */ 
 
+        It is way complicated to create in client and also complicated to process in server side. Hence we won't use PATCH
+    */
 }
