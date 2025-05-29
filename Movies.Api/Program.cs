@@ -14,8 +14,9 @@ builder.Services.AddControllers();
 // Because entire point of having application layer is to encapsulate it's logic in that layer only. By doing this it 
 // implies that every consumer should know. How application concerns needs to be registered. which is not good way of 
 
-builder.Services.AddApplicationServices();
-
+var dbConnection = builder.Configuration.GetConnectionString("Database") ?? throw new InvalidOperationException("Connection string not found");
+builder.Services.AddApplication();
+builder.Services.AddDatabase(dbConnection);
 
 var app = builder.Build();
 

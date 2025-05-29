@@ -1,8 +1,9 @@
-﻿using Movies.Application.Models;
+﻿using Movies.Application.Database;
+using Movies.Application.Models;
 
 namespace Movies.Application.Repositories;
 
-public class MovieRepository : IMovieRepository
+public class MovieRepository(IDbConnectionFactory connectionFactory) : IMovieRepository
 {
     private readonly List<Movie> _movies = []; // for now this will act as in memory db.
 
@@ -19,7 +20,7 @@ public class MovieRepository : IMovieRepository
     }
 
     public Task<IEnumerable<Movie>> GetAllAsync()
-    {
+    {    
         return Task.FromResult(_movies.AsEnumerable());
     }
 
