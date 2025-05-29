@@ -291,6 +291,146 @@
 
 
 
+############ Other my notes during this #############
+
+Why don't we use [ValidateAntiForgeryToken] in Web APIs ?
+No, you typically DON'T use [ValidateAntiForgeryToken] in Web APIs. Here's why and what to do instead:
+
+Why APIs Are Different
+
+No browser-based sessions - APIs don't rely on cookies for auth
+Token-based authentication - Use JWT, API keys, etc.
+Same-origin policy - CORS handles cross-origin requests
+JSON requests - Not form submissions that CSRF typically targets
+
+CSRF Protection Strategies for Web APIs
+1. Token-Based Authentication (Recommended)
+2. CORS Configuration
+3. Custom Headers (SameSite APIs)
+4. When You MIGHT Use Anti-Forgery in APIs
+Only if your API accepts cookie-based authentication:
+
+
+Best Practice for Web APIs
+Use this approach:
+
+[Authorize] // JWT/API Key authentication
+[HttpPost]
+public IActionResult CreateMovie([FromBody] Movie movie)
+{
+    // CSRF protection comes from:
+    // 1. Token-based auth (not cookies)
+    // 2. CORS policy
+    // 3. Same-origin policy
+}
+
+
+Summary: Web APIs are naturally more resistant to CSRF because they don't rely on automatic cookie submission. Focus on proper authentication and CORS configuration instead of anti-forgery tokens.
+
+
+
+
+Here's what each attribute does and how they're different:
+
+## **FromBody** - Request Body
+```csharp
+[HttpPost]
+public IActionResult CreateMovie([FromBody] Movie movie)
+{
+    // Gets data from JSON/XML in request body
+}
+```
+- **Source:** HTTP request body (JSON, XML, etc.)
+- **Use case:** Complex objects, POST/PUT operations
+- **Example:** `{ "title": "Avatar", "year": 2009 }`
+
+## **FromForm** - Form Data
+```csharp
+[HttpPost]
+public IActionResult UploadMovie([FromForm] string title, [FromForm] IFormFile poster)
+{
+    // Gets data from form submission
+}
+```
+- **Source:** Form fields (`application/x-www-form-urlencoded` or `multipart/form-data`)
+- **Use case:** HTML forms, file uploads
+- **Example:** Form with input fields or file uploads
+
+## **FromRoute** - URL Path
+```csharp
+[HttpGet("{id}")]
+public IActionResult GetMovie([FromRoute] int id)
+{
+    // Gets 'id' from URL path
+}
+```
+- **Source:** URL path segments
+- **Use case:** RESTful routes like `/movies/123`
+- **Example:** `/movies/123` → `id = 123`
+
+## **FromQuery** - Query String
+```csharp
+[HttpGet]
+public IActionResult SearchMovies([FromQuery] string genre, [FromQuery] int year)
+{
+    // Gets parameters from query string
+}
+```
+- **Source:** URL query string
+- **Use case:** Filtering, searching, pagination
+- **Example:** `/movies?genre=action&year=2020`
+
+## **FromHeader** - HTTP Headers
+```csharp
+[HttpGet]
+public IActionResult GetMovies([FromHeader(Name = "X-API-Version")] string version)
+{
+    // Gets value from HTTP header
+}
+```
+- **Source:** HTTP request headers
+- **Use case:** API versioning, authentication tokens, custom headers
+- **Example:** `X-API-Version: 1.0`
+
+## **FromServices** - Dependency Injection
+```csharp
+[HttpGet]
+public IActionResult GetMovies([FromServices] IMovieService movieService)
+{
+    // Gets service from DI container
+}
+```
+- **Source:** Dependency Injection container
+- **Use case:** Injecting services into action methods
+- **Example:** Alternative to constructor injection
+
+## **FromKeyedServices** - Keyed DI (.NET 8+)
+```csharp
+[HttpGet]
+public IActionResult GetMovies([FromKeyedServices("premium")] IMovieService service)
+{
+    // Gets specific keyed service from DI
+}
+```
+- **Source:** Keyed services in DI container
+- **Use case:** Multiple implementations of same interface
+- **Example:** Different service implementations based on key
+
+## **Key Differences:**
+
+| Attribute | Data Source | Common Use |
+|-----------|-------------|------------|
+| `FromBody` | Request body | Complex objects |
+| `FromForm` | Form data | File uploads, HTML forms |
+| `FromRoute` | URL path | RESTful IDs |
+| `FromQuery` | Query string | Filters, search |
+| `FromHeader` | HTTP headers | Metadata, auth |
+| `FromServices` | DI container | Business services |
+| `FromKeyedServices` | Keyed DI | Multiple service variants |
+
+
+
+
 
 
 ## Database Setup
