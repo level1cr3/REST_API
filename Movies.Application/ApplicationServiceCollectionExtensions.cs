@@ -21,6 +21,10 @@ public static class ApplicationServiceCollectionExtensions
         
         // factory-based registration
         service.AddSingleton<IDbConnectionFactory>(_ => new NpgsqlDbConnectionFactory(connectionString));
+        // this is singleton masking a transient. because CreateConnectionAsync() method returns 'new' instance everytime.
+
+        service.AddSingleton<DbInitializer>();
+        
         return service;
     }
 }

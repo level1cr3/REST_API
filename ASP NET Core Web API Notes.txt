@@ -431,6 +431,9 @@ public IActionResult GetMovies([FromKeyedServices("premium")] IMovieService serv
 
 
 
+######## later build this project with
+1. ef core.
+2. and proper identity for authentication responsible for generating jwt token.
 
 
 ## Database Setup

@@ -1,4 +1,5 @@
 using Movies.Application;
+using Movies.Application.Database;
 using Movies.Application.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,4 +29,25 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapControllers();
+
+var dbInitializer = app.Services.GetRequiredService<DbInitializer>();
+await dbInitializer.InitializeAsync();
+
 app.Run();
+
+
+/*
+
+GetService<T>()
+
+Returns: The service instance if it is registered, or null if not.
+Throws: Never throws if the service is missing (returns null instead).
+Usage: Use when the dependency is optional.
+
+GetRequiredService<T>()
+
+Returns: The service instance if it is registered.
+Throws: Throws an InvalidOperationException if the service is not registered.
+Usage: Use when the dependency is required and your app cannot function without it.
+
+*/
