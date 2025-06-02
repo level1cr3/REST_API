@@ -430,6 +430,16 @@ public IActionResult GetMovies([FromKeyedServices("premium")] IMovieService serv
 
 
 
+### Diff in use case vs service
+
+RegisterUserHandler = use case
+
+UserService = support logic (e.g. checking email format or sending email)
+
+
+
+
+
 
 ######## later build this project with
 1. ef core.

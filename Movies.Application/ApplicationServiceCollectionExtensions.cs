@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Movies.Application.Database;
 using Movies.Application.Repositories;
+using Movies.Application.Services;
 
 namespace Movies.Application;
 
@@ -9,7 +10,7 @@ public static class ApplicationServiceCollectionExtensions
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddSingleton<IMovieRepository, MovieRepository>();
-        // adding as a singleton. because we want only one instance of it throughout my application since it has by 'db in memory'. which i don't want to reset
+        services.AddSingleton<IMovieService, MovieService>(); //singleton because there is no shared state. in movie service.
         return services;
     }
 

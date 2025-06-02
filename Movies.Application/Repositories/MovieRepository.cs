@@ -4,7 +4,7 @@ using Movies.Application.Models;
 
 namespace Movies.Application.Repositories;
 
-public class MovieRepository(IDbConnectionFactory connectionFactory) : IMovieRepository
+internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : IMovieRepository
 {
     private readonly List<Movie> _movies = []; // for now this will act as in memory db.
 

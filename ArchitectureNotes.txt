@@ -1,0 +1,48 @@
+### General flow of the application ###
+
+- overall flow
+    - contracts
+        > we have API contracts. This is what the consumer or client of API will use communicate with server. and server will use these contracts to response to the client.
+    - api
+        > client sends the request to api endpoints (controllers). 
+        > this request is in the form of request contracts. which is validated via FluentValidation for genral validations only.
+        > controller maps the contract to appropriate dto or entity model. and send it to the appropriate service (business layer)
+    - application
+        > business layer
+            > does business validations. 
+            > maps to entity model (if required)
+            > applies the business logic. and sends to repository only for presisting the data or getting the data (query and command only)
+        > database layer
+            > repository is responsible for talking to the database.    
+            > also have the entity model.
+
+
+- contracts
+> contract for communicating between client and server.
+
+
+- application
+> This layer is main application.
+> deal with database.
+> have the business logic.
+> have the validations. for business logic vai FluentValidation
+
+
+
+- API (application programming interface)
+> deals with http request. where to send the request. how the endpoints are mapped
+> how dto or entity models are mapped to contracts and vice versa.
+> contract validations.
+
+
+- we could later break the database layer from application if nessary. But i don't think we need it for now.
+
+
+> we don't want controller to directly be dealing with repositories
+> because we want to add the business logic in our application.
+> 'Repositories' should only deal with database related concerns.
+> business logic should not live in controller. because then application layer is lacking in functionality.
+> also then every other way of interfacing the database wheather that is api and mvc or razor pages needs to implement these business logic as well.
+> basically if we put business logic in controller then we can't easily change api project to mvc or razor because then those projects also need to implement it.
+
+> if we did clean architecture then instead of these services we would have mediatr, cqrs.
