@@ -10,9 +10,9 @@ public sealed class DbInitializer(IDbConnectionFactory connectionFactory)
 
         const string createMoviesTableSql = """
                                              create table if not exists movies(
-                                                 id UUID primary key,
-                                                 slug TEXT not null,
-                                                 title TEXT not null,
+                                                 id uuid primary key,
+                                                 slug text not null,
+                                                 title text not null,
                                                  yearofrelease integer not null
                                              );
                                             """;
@@ -23,8 +23,16 @@ public sealed class DbInitializer(IDbConnectionFactory connectionFactory)
                                            using btree(slug);
                                           """;
 
+        const string createGenreTableSql = """
+                                            create table if not exists genres(
+                                              movieId uuid references movies (Id),
+                                              name text not null
+                                            );
+                                           """;
+
         await connection.ExecuteAsync(createMoviesTableSql);
         await connection.ExecuteAsync(createSlugIndexSql);
+        await connection.ExecuteAsync(createGenreTableSql);
     }
 }
 
