@@ -46,3 +46,10 @@
 > basically if we put business logic in controller then we can't easily change api project to mvc or razor because then those projects also need to implement it.
 
 > if we did clean architecture then instead of these services we would have mediatr, cqrs.
+
+
+- we have to seprate 2 types of validations
+1 API level validations : to make sure contracts are the way they should be.
+2 Business level validations : something coming in as a movie needs to be valid in order for it to be created.
+
+> we won't write validations like if statement in every method of service class that will bloat the methods. so we will use FluentValidation. use package FluentValidation.dependencyInjection
