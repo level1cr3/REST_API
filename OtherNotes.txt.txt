@@ -76,3 +76,8 @@ public class StatefulService
 - Only Singleton stateless or thread-safe services.
 
 Let me know if you want code examples!
+
+
+
+- CancellationToken only works when you carry them all the way down to the inner most async method that accepts it.
+- example from API endpoint to db query method.

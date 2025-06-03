@@ -13,10 +13,10 @@ namespace Movies.Api.Controllers;
 public class MoviesController(IMovieService movieService) : ControllerBase
 {
     [HttpPost(ApiEndpoints.Movies.Create)] // this way i don't have to use route attribute explicitly.
-    public async Task<IActionResult> Create([FromBody] CreateMovieRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateMovieRequest request, CancellationToken cancellationToken)
     {
         var movie = request.MapToMovie();
-        var isCreated = await movieService.CreateAsync(movie);
+        var isCreated = await movieService.CreateAsync(movie, cancellationToken);
         var responseObj = movie.MapToMovieResponse();
 
         // return isCreated ? Created($"/{ApiEndpoints.Movies.Create}/{responseObj.Id}",responseObj) : BadRequest();

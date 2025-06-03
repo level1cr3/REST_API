@@ -8,46 +8,46 @@ public sealed class MovieService(IMovieRepository movieRepository, IValidator<Mo
 {
     
     
-    public async Task<Movie?> GetByIdAsync(Guid id)
+    public async Task<Movie?> GetByIdAsync(Guid id,CancellationToken cancellationToken = default)
     {
-        return await movieRepository.GetByIdAsync(id);
+        return await movieRepository.GetByIdAsync(id, cancellationToken);
     }
 
-    public async Task<Movie?> GetBySlugAsync(string slug)
+    public async Task<Movie?> GetBySlugAsync(string slug,CancellationToken cancellationToken = default)
     {
-        return await movieRepository.GetBySlugAsync(slug);
+        return await movieRepository.GetBySlugAsync(slug, cancellationToken);
     }
 
-    public async Task<IEnumerable<Movie>> GetAllAsync()
+    public async Task<IEnumerable<Movie>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await movieRepository.GetAllAsync();
+        return await movieRepository.GetAllAsync(cancellationToken);
     }
 
-    public async Task<bool> CreateAsync(Movie movie)
+    public async Task<bool> CreateAsync(Movie movie, CancellationToken cancellationToken = default)
     {
         // var result = await movieValidator.ValidateAsync(movie); // explicitly handle validation failure. decide what to show to user.
-        await movieValidator.ValidateAndThrowAsync(movie);// if not valid throws error. which we could catch in global exception middleware and return that .
-        return await movieRepository.CreateAsync(movie);
+        await movieValidator.ValidateAndThrowAsync(movie, cancellationToken);// if not valid throws error. which we could catch in global exception middleware and return that .
+        return await movieRepository.CreateAsync(movie, cancellationToken);
     }
 
-    public async Task<Movie?> UpdateAsync(Movie movie)
+    public async Task<Movie?> UpdateAsync(Movie movie,CancellationToken cancellationToken = default)
     {
-        await movieValidator.ValidateAndThrowAsync(movie);
+        await movieValidator.ValidateAndThrowAsync(movie, cancellationToken: cancellationToken);
         // adding business logic
-        var movieExists = await movieRepository.ExistsByIdAsync(movie.Id);
+        var movieExists = await movieRepository.ExistsByIdAsync(movie.Id, cancellationToken);
 
         if (!movieExists)
         {
             return null;
         }
 
-        await movieRepository.UpdateAsync(movie);
+        await movieRepository.UpdateAsync(movie, cancellationToken);
         return movie;
     }
 
-    public async Task<bool> DeleteByIdAsync(Guid id)
+    public async Task<bool> DeleteByIdAsync(Guid id,CancellationToken cancellationToken = default)
     {
-        return await movieRepository.DeleteByIdAsync(id);
+        return await movieRepository.DeleteByIdAsync(id, cancellationToken);
     }
     
 }

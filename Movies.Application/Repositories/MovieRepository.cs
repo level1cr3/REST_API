@@ -8,9 +8,9 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
 {
     private readonly List<Movie> _movies = []; // for now this will act as in memory db.
 
-    public async Task<Movie?> GetByIdAsync(Guid id)
+    public async Task<Movie?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using var connection = await connectionFactory.CreateConnectionAsync();
+        using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
 
         const string getMovieByIdSql = """
                                         select * from movies
@@ -20,7 +20,8 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         // we don't need limit. because we are querying by id primary key also we are using singleOrDefault
 
         var movie =
-            await connection.QuerySingleOrDefaultAsync<Movie>(new CommandDefinition(getMovieByIdSql, new { id }));
+            await connection.QuerySingleOrDefaultAsync<Movie>(new CommandDefinition(getMovieByIdSql, new { id },
+                cancellationToken: cancellationToken));
 
         if (movie is null)
         {
@@ -32,7 +33,8 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
                                               where movieid = @id; 
                                              """;
 
-        var generes = await connection.QueryAsync<string>(new CommandDefinition(getGenresByMovieIdSql, new { id }));
+        var generes = await connection.QueryAsync<string>(new CommandDefinition(getGenresByMovieIdSql, new { id },
+            cancellationToken: cancellationToken));
 
         // movie.Genres = generes; this won't work right now but if genres is big list. later on we could make this property from init to set 
 
@@ -44,9 +46,9 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         return movie;
     }
 
-    public async Task<Movie?> GetBySlugAsync(string slug)
+    public async Task<Movie?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
     {
-        using var connection = await connectionFactory.CreateConnectionAsync();
+        using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
 
         const string getMovieBySlugSql = """
                                           select * from movies         
@@ -54,7 +56,7 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
                                          """;
 
         var movie = await connection.QuerySingleOrDefaultAsync<Movie>(new CommandDefinition(getMovieBySlugSql,
-            new { Slug = slug }));
+            new { Slug = slug }, cancellationToken: cancellationToken));
 
         if (movie is null)
         {
@@ -67,7 +69,8 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
                                              """;
 
         var genres =
-            await connection.QueryAsync<string>(new CommandDefinition(getGenresByMovieIdSql, new { id = movie.Id }));
+            await connection.QueryAsync<string>(new CommandDefinition(getGenresByMovieIdSql, new { id = movie.Id },
+                cancellationToken: cancellationToken));
 
         foreach (var genre in genres)
         {
@@ -78,18 +81,19 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
     }
 
 
-    public async Task<IEnumerable<Movie>> GetAllAsync()
+    public async Task<IEnumerable<Movie>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        using var connection = await connectionFactory.CreateConnectionAsync();
+        using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
 
-        const string getMovieByIdSql = """
-                                        select m.*, g.name AS genre from movies m
-                                        left join genres g on m.id = g.movieid
-                                       """;
+        const string getAllMovies = """
+                                     select m.*, g.name AS genre from movies m
+                                     left join genres g on m.id = g.movieid
+                                    """;
 
         var movieDict = new Dictionary<Guid, Movie>();
+
         await connection.QueryAsync<Movie, string, Movie>(
-            getMovieByIdSql,
+            new CommandDefinition(getAllMovies, cancellationToken: cancellationToken),
             (movie, genre) =>
             {
                 if (!movieDict.TryGetValue(movie.Id, out var movieEntry))
@@ -109,9 +113,9 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         return movieDict.Values;
     }
 
-    public async Task<bool> CreateAsync(Movie movie)
+    public async Task<bool> CreateAsync(Movie movie, CancellationToken cancellationToken = default)
     {
-        using var connection = await connectionFactory.CreateConnectionAsync();
+        using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
 
         try
@@ -129,7 +133,8 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
 
 
             var affectedRows =
-                await connection.ExecuteAsync(new CommandDefinition(createMovieSql, movie, transaction));
+                await connection.ExecuteAsync(new CommandDefinition(createMovieSql, movie, transaction,
+                    cancellationToken: cancellationToken));
             // take values for parameter from object that i'm passing you that is the reason why params needs to be in pascal case similar to movie object.
 
 
@@ -143,7 +148,8 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
                 foreach (var genre in movie.Genres)
                 {
                     await connection.ExecuteAsync(
-                        new CommandDefinition(createGenreSql, new { MovieId = movie.Id, Name = genre }, transaction));
+                        new CommandDefinition(createGenreSql, new { MovieId = movie.Id, Name = genre }, transaction,
+                            cancellationToken: cancellationToken));
                 }
             }
 
@@ -160,9 +166,9 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         }
     }
 
-    public async Task<bool> UpdateAsync(Movie movie)
+    public async Task<bool> UpdateAsync(Movie movie, CancellationToken cancellationToken = default)
     {
-        using var connection = await connectionFactory.CreateConnectionAsync();
+        using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
 
         try
@@ -172,7 +178,7 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
 
             const string removeGenresByMovieId = """ delete from genres where movieid = @movieId """;
             await connection.ExecuteAsync(new CommandDefinition(removeGenresByMovieId, new { movieId = movie.Id },
-                transaction));
+                transaction, cancellationToken: cancellationToken));
 
             const string addGenresForMovie = """
                                               insert into genres(movieid, name)
@@ -180,7 +186,8 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
                                              """;
             // insert multiple rows.
             var genres = movie.Genres.Select(name => new { movieId = movie.Id, name });
-            await connection.ExecuteAsync(new CommandDefinition(addGenresForMovie, genres, transaction));
+            await connection.ExecuteAsync(new CommandDefinition(addGenresForMovie, genres, transaction,
+                cancellationToken: cancellationToken));
 
             const string updateMovieSql = """
                                            update movies 
@@ -190,7 +197,7 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
             var affectedRows = await connection.ExecuteAsync(
                 new CommandDefinition(updateMovieSql,
                     new { slug = movie.Slug, title = movie.Title, yearofrelease = movie.YearOfRelease, id = @movie.Id },
-                    transaction));
+                    transaction, cancellationToken: cancellationToken));
 
             transaction.Commit();
             return affectedRows > 0;
@@ -204,9 +211,9 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         }
     }
 
-    public async Task<bool> DeleteByIdAsync(Guid id)
+    public async Task<bool> DeleteByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using var connection = await connectionFactory.CreateConnectionAsync();
+        using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
 
         try
@@ -216,16 +223,18 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
                                            where movieid = @Id
                                           """;
 
-            await connection.ExecuteAsync(new CommandDefinition(deleteGenreSql, new { Id = id }, transaction));
+            await connection.ExecuteAsync(new CommandDefinition(deleteGenreSql, new { Id = id }, transaction,
+                cancellationToken: cancellationToken));
 
-            
+
             const string deleteMovieSql = """
                                            delete from movies
                                            where id = @Id
                                           """;
 
             var affectedRows =
-                await connection.ExecuteAsync(new CommandDefinition(deleteMovieSql, new { Id = id }, transaction));
+                await connection.ExecuteAsync(new CommandDefinition(deleteMovieSql, new { Id = id }, transaction,
+                    cancellationToken: cancellationToken));
 
 
             transaction.Commit();
@@ -240,16 +249,17 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
     }
 
 
-    public async Task<bool> ExistsByIdAsync(Guid id)
+    public async Task<bool> ExistsByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        using var connection = await connectionFactory.CreateConnectionAsync();
+        using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
 
         const string movieExistsSql = """select exists(select 1 from movies where id = @id);""";
         var result =
-            await connection.ExecuteScalarAsync<bool>(new CommandDefinition(movieExistsSql, new { id }));
+            await connection.ExecuteScalarAsync<bool>(new CommandDefinition(movieExistsSql, new { id },
+                cancellationToken: cancellationToken));
 
         // `ExecuteScalarAsync<T>` | Get a **single value** (e.g. COUNT, ID, scalar) | using this because that is what it was made for.
-        
+
         return result;
     }
 }
