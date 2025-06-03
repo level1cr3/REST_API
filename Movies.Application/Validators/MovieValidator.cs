@@ -1,17 +1,23 @@
 ﻿using FluentValidation;
 using Movies.Application.Models;
+using Movies.Application.Repositories;
 using Movies.Application.Services;
 
 namespace Movies.Application.Validators;
 
-public class MovieValidator : AbstractValidator<Movie>
+public sealed class MovieValidator : AbstractValidator<Movie>
 {
-    private readonly IMovieService _movieService;
+    // private readonly IMovieService _movieService;
+    // ##### Important #########
+    // should not inject service in validators. because we will use these validations inside the services only
+    // so this could lead to circular dependency because service dependence on validator and validator depends on service
+    // So we will use repository instead.
 
-
-    public MovieValidator(IMovieService movieService)
+    private readonly IMovieRepository _movieRepository;
+    
+    public MovieValidator(IMovieRepository movieRepository)
     {
-        _movieService = movieService;
+        _movieRepository = movieRepository;
         
         RuleFor(x => x.Id).NotEmpty();
 
@@ -28,7 +34,7 @@ public class MovieValidator : AbstractValidator<Movie>
 
     private async Task<bool> ValidateSlug(Movie movie, string slug, CancellationToken cancellationToken = default)
     {
-        var existingMovie = await _movieService.GetBySlugAsync(slug);
+        var existingMovie = await _movieRepository.GetBySlugAsync(slug);
         return existingMovie is null || existingMovie.Id == movie.Id; 
         // either there should not be any movie. for create senario.
         // if there is a movie it's id should match with one we are updating.

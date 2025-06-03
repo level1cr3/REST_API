@@ -1,10 +1,13 @@
-﻿using Movies.Application.Models;
+﻿using FluentValidation;
+using Movies.Application.Models;
 using Movies.Application.Repositories;
 
 namespace Movies.Application.Services;
 
-internal sealed class MovieService(IMovieRepository movieRepository) : IMovieService
+public sealed class MovieService(IMovieRepository movieRepository, IValidator<Movie> movieValidator) : IMovieService
 {
+    
+    
     public async Task<Movie?> GetByIdAsync(Guid id)
     {
         return await movieRepository.GetByIdAsync(id);
@@ -22,13 +25,15 @@ internal sealed class MovieService(IMovieRepository movieRepository) : IMovieSer
 
     public async Task<bool> CreateAsync(Movie movie)
     {
+        // var result = await movieValidator.ValidateAsync(movie); // explicitly handle validation failure. decide what to show to user.
+        await movieValidator.ValidateAndThrowAsync(movie);// if not valid throws error. which we could catch in global exception middleware and return that .
         return await movieRepository.CreateAsync(movie);
     }
 
     public async Task<Movie?> UpdateAsync(Movie movie)
     {
+        await movieValidator.ValidateAndThrowAsync(movie);
         // adding business logic
-        
         var movieExists = await movieRepository.ExistsByIdAsync(movie.Id);
 
         if (!movieExists)

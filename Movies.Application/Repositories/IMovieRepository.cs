@@ -2,7 +2,7 @@
 
 namespace Movies.Application.Repositories;
 
-internal interface IMovieRepository
+public interface IMovieRepository
 {
     Task<Movie?> GetByIdAsync(Guid id);
     

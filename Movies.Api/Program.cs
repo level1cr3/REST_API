@@ -1,3 +1,4 @@
+using Movies.Api.Middleware;
 using Movies.Application;
 using Movies.Application.Database;
 using Movies.Application.Repositories;
@@ -19,7 +20,15 @@ var dbConnection = builder.Configuration.GetConnectionString("Database") ?? thro
 builder.Services.AddApplication();
 builder.Services.AddDatabase(dbConnection);
 
+//exception
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+//  Multiple handlers can be added and they're called by the middleware in the order they're added
+// this is the middleware btw app.UseExceptionHandler(); 
+
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -28,6 +37,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+
 app.MapControllers();
 
 var dbInitializer = app.Services.GetRequiredService<DbInitializer>();

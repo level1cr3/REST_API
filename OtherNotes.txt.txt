@@ -1,0 +1,78 @@
+Great questions! Here are clear, beginner-friendly answers:
+
+---
+
+## 1. Should a repository using DbContext (ApplicationContext) be registered as **scoped**?
+
+**YES, it should be registered as scoped.**
+
+- **Why?**
+  - `DbContext` in Entity Framework Core is designed to be used per HTTP request (per unit of work).
+  - **Scoped** lifetime means one instance per HTTP request or logical operation.
+  - If you make it **singleton**, you’ll share a single `DbContext` across all requests, which causes threading issues and incorrect data.
+  - If you make it **transient**, you’ll get a new `DbContext` every time, which can break tracking and transactions.
+
+**So:**
+```csharp
+services.AddScoped<IMyRepository, MyRepository>();
+services.AddScoped<ApplicationContext>();
+```
+
+---
+
+## 2. What does "has no state" mean? (Easy explanation)
+
+- **"No state"** means the object **doesn’t remember anything between uses**.
+- It doesn’t keep any data in fields or variables that change during its lifetime.
+
+**Examples:**
+
+- **Stateless:**  
+  - A calculator class where every method just adds or multiplies numbers you give it, and doesn't keep track of previous results.
+  - A service that always returns the current time.
+
+- **Stateful:**  
+  - A shopping cart object that remembers what items you’ve added.
+  - A logger that remembers how many messages have been logged.
+
+**In coding terms:**
+```csharp
+public class StatelessService
+{
+    public int Add(int a, int b) => a + b; // No fields, just does work
+}
+
+public class StatefulService
+{
+    private int _counter = 0; // This is state!
+    public void Increment() => _counter++;
+    public int GetValue() => _counter;
+}
+```
+
+---
+
+## 3. Why does this matter for Singleton/Scoped/Transient?
+
+- **Singleton:** Share one instance for the whole app. Only safe for stateless or thread-safe state.
+- **Scoped:** New instance per request. Good for things like `DbContext` or repositories.
+- **Transient:** New instance every time. Good for lightweight, stateless services.
+
+---
+
+## **Summary Table**
+
+| Lifetime    | Has State? | Example                             | When to use                |
+|-------------|------------|-------------------------------------|----------------------------|
+| Singleton   | No         | Logger with no fields, config reader| Stateless, thread-safe     |
+| Scoped      | Yes/No     | DbContext, Repositories             | Per-request dependencies   |
+| Transient   | No         | Utility classes, calculators        | Lightweight, stateless     |
+
+---
+
+**TL;DR:**  
+- **Repositories using DbContext should be Scoped.**
+- "No state" = doesn’t remember anything between uses (no changing fields).
+- Only Singleton stateless or thread-safe services.
+
+Let me know if you want code examples!
