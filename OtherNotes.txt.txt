@@ -81,3 +81,10 @@ Let me know if you want code examples!
 
 - CancellationToken only works when you carry them all the way down to the inner most async method that accepts it.
 - example from API endpoint to db query method.
+
+
+- Authentication and Authorization.
+
+> Authentication is the process of verifying who the user is.
+
+> Authorization is the process of verifying what a user can do.
