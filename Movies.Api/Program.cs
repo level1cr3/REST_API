@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Movies.Api.Constants;
 using Movies.Api.Middleware;
 using Movies.Application;
 using Movies.Application.Database;
@@ -22,20 +23,43 @@ builder.Services.AddAuthentication(option =>
 {
     option.TokenValidationParameters = new TokenValidationParameters
     {
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Auth validation key not found"))) ,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ??
+                                                                           throw new InvalidOperationException(
+                                                                               "Auth validation key not found"))),
         // key should not leak because that is what we are using to validate someone.
-        ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Auth valid issuer not found"),
-        ValidAudience = builder.Configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Auth valid audience not found"),
-        
+        ValidIssuer = builder.Configuration["Jwt:Issuer"] ??
+                      throw new InvalidOperationException("Auth valid issuer not found"),
+        ValidAudience = builder.Configuration["Jwt:Audience"] ??
+                        throw new InvalidOperationException("Auth valid audience not found"),
+
         // enable below settings or nothing will be validated.
-        ValidateIssuerSigningKey = true, 
+        ValidateIssuerSigningKey = true,
         ValidateLifetime = true,
         ValidateIssuer = true,
         ValidateAudience = true,
     }; // here we will decide how we want to validate the token.
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(option =>
+{
+    option.AddPolicy(AuthConstants.AdminUserPolicyName,
+        policy => policy.RequireClaim(AuthConstants.AdminUserClaimName, "true"));
+
+    option.AddPolicy(AuthConstants.TrustedOrAdminUserPolicyName, policy => policy.RequireAssertion(context =>
+        context.User.HasClaim(AuthConstants.TrustedUserClaimName, "true") ||
+        context.User.HasClaim(AuthConstants.AdminUserClaimName, "true")
+    ));
+
+    /* with pattern matching.
+     
+    option.AddPolicy(AuthConstants.TrustedOrAdminUserPolicyName, policy => policy.RequireAssertion(context =>
+        context.User.HasClaim(claim => claim is { Type: AuthConstants.TrustedUserClaimName, Value: "true" }) ||
+        context.User.HasClaim(claim => claim is { Type: AuthConstants.AdminUserClaimName, Value: "true" })
+    ));
+    
+    */
+    
+});
 
 
 // builder.Services.AddSingleton<IMovieRepository,MovieRepository>();
@@ -43,7 +67,8 @@ builder.Services.AddAuthorization();
 // Because entire point of having application layer is to encapsulate it's logic in that layer only. By doing this it 
 // implies that every consumer should know. How application concerns needs to be registered. which is not good way of 
 
-var dbConnection = builder.Configuration.GetConnectionString("Database") ?? throw new InvalidOperationException("Connection string not found");
+var dbConnection = builder.Configuration.GetConnectionString("Database") ??
+                   throw new InvalidOperationException("Connection string not found");
 builder.Services.AddApplication();
 builder.Services.AddDatabase(dbConnection);
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Movies.Api.Constants;
 using Movies.Api.Mapping;
 using Movies.Api.Routes;
 using Movies.Application.Models;
@@ -10,10 +11,10 @@ using Movies.Contracts.Responses;
 
 namespace Movies.Api.Controllers;
 
-[Authorize]
 [ApiController]
 public class MoviesController(IMovieService movieService) : ControllerBase
 {
+    [Authorize(AuthConstants.TrustedOrAdminUserPolicyName)]
     [HttpPost(ApiEndpoints.Movies.Create)] // this way i don't have to use route attribute explicitly.
     public async Task<IActionResult> Create([FromBody] CreateMovieRequest request, CancellationToken cancellationToken)
     {
@@ -48,7 +49,6 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     }
 
     // it important to not expose domain object outside. and only use contracts. for request and response. Because contract are supposed to be fixed.
-
     [HttpGet(ApiEndpoints.Movies.GetAll)]
     public async Task<IActionResult> GetAll()
     {
@@ -60,6 +60,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
 
     // update has both route parameter and request body
     // route parameter has id of resource they want to update.
+    [Authorize(AuthConstants.TrustedOrAdminUserPolicyName)]
     [HttpPut(ApiEndpoints.Movies.Update)]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateMovieRequest request)
     {
@@ -75,6 +76,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(AuthConstants.AdminUserPolicyName)]
     [HttpDelete(ApiEndpoints.Movies.Delete)]
     public async Task<IActionResult> Delete([FromRoute] Guid id)
     {
