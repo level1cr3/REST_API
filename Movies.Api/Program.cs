@@ -1,3 +1,6 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Movies.Api.Middleware;
 using Movies.Application;
 using Movies.Application.Database;
@@ -9,6 +12,30 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
+
+builder.Services.AddAuthentication(option =>
+{
+    option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    option.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(option =>
+{
+    option.TokenValidationParameters = new TokenValidationParameters
+    {
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Auth validation key not found"))) ,
+        // key should not leak because that is what we are using to validate someone.
+        ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Auth valid issuer not found"),
+        ValidAudience = builder.Configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Auth valid audience not found"),
+        
+        // enable below settings or nothing will be validated.
+        ValidateIssuerSigningKey = true, 
+        ValidateLifetime = true,
+        ValidateIssuer = true,
+        ValidateAudience = true,
+    }; // here we will decide how we want to validate the token.
+});
+
+builder.Services.AddAuthorization();
 
 
 // builder.Services.AddSingleton<IMovieRepository,MovieRepository>();
@@ -38,6 +65,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

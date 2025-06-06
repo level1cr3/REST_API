@@ -13,7 +13,7 @@ namespace Identity.Api.Controllers;
 [ApiController]
 public class IdentityController : ControllerBase
 {
-    private const string TokenSecret = "ForLoveOfGodStoreAndLoadThisSecurely";
+    private const string TokenSecret = "ForLoveOfGodStoreAndLoadThisSecurely"; // this key should never leak or you are done for hacked.
     private static readonly TimeSpan TokenLifeTime = TimeSpan.FromHours(8);
 
     [HttpPost("token")]
@@ -58,8 +58,8 @@ public class IdentityController : ControllerBase
         {
             Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.Add(TokenLifeTime),
-            Issuer = "https://id.example.com",
-            Audience = "https://id.example.com",
+            Issuer = "https://yogesh.dotnet.com",
+            Audience = "https://yogesh.react.com",
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature )
         };
 
