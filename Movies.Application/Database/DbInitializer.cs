@@ -25,14 +25,25 @@ public sealed class DbInitializer(IDbConnectionFactory connectionFactory)
 
         const string createGenreTableSql = """
                                             create table if not exists genres(
-                                              movieId uuid references movies (Id),
+                                              movieid uuid references movies (id),
                                               name text not null
                                             );
                                            """;
 
+        const string createRatingsTableSql ="""
+                                            create table if not exists ratings(
+                                                userid uuid,
+                                                movieid uuid references movies (id),
+                                                rating integer not null,
+                                                primary key (userid,movieid)
+                                            );
+                                            """; 
+        // in ratings table we have a composite key. because primary key is composed of 2 columns.
+        
         await connection.ExecuteAsync(createMoviesTableSql);
         await connection.ExecuteAsync(createSlugIndexSql);
         await connection.ExecuteAsync(createGenreTableSql);
+        await connection.ExecuteAsync(createRatingsTableSql);
     }
 }
 
