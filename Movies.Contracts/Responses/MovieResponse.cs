@@ -8,7 +8,14 @@ public record MovieResponse
     
     public required string Title { get; init; }
 
+    public float? Rating { get; init; }
+    
+    public int? UserRating { get; init; }
+    
     public required int YearOfRelease { get; init; }
 
     public required IEnumerable<string> Genres { get; init; } = [];
 }
+
+// responses will include 2 ratings. The general rating for the movie and also the suer specific ratings.
+// they will also be nullable.

@@ -19,5 +19,27 @@ public static class ApiEndpoints
         public const string GetAll = Base;
         public const string Update = $"{Base}/{{id:guid}}";
         public const string Delete = $"{Base}/{{id:guid}}";
+        
+        // rating are directly attached to the movies they are not independent resource. We are going to get the ratings for the movie
+        // that is why they will live inside the movies.
+
+        public const string Rate = $"{Base}/{{id:guid}}/ratings"; // create rating for single movie.
+        public const string DeleteRating = $"{Base}/{{id:guid}}/ratings"; // delete rating for single movie.
+        
+    }
+    
+    public static class Ratings
+    {
+        // to get all the ratings for a user
+        // this is different and should live in ratings
+        
+        private const string Base = $"{ApiBase}/ratings"; // here ratings are the main resource.
+
+        public const string GetUserRatings = $"{Base}/me"; // get my ratings.
+        
+        // this 'me' wording is very common in the rest api. It is used when you want to get something about the logged-in user.
+
+
+
     }
 }
