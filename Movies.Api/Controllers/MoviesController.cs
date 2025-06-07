@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Movies.Api.Constants;
+using Movies.Api.Extensions;
 using Movies.Api.Mapping;
 using Movies.Api.Routes;
 using Movies.Application.Models;
@@ -33,11 +34,13 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     }
 
     [HttpGet(ApiEndpoints.Movies.Get)]
-    public async Task<IActionResult> Get([FromRoute] string idOrSlug)
+    public async Task<IActionResult> Get([FromRoute] string idOrSlug, CancellationToken cancellationToken)
     {
+        var userId = HttpContext.GetUserId();
+
         var movie = Guid.TryParse(idOrSlug, out var id)
-            ? await movieService.GetByIdAsync(id)
-            : await movieService.GetBySlugAsync(idOrSlug);
+            ? await movieService.GetByIdAsync(id, userId, cancellationToken)
+            : await movieService.GetBySlugAsync(idOrSlug, userId, cancellationToken);
 
         if (movie is null)
         {
@@ -50,9 +53,10 @@ public class MoviesController(IMovieService movieService) : ControllerBase
 
     // it important to not expose domain object outside. and only use contracts. for request and response. Because contract are supposed to be fixed.
     [HttpGet(ApiEndpoints.Movies.GetAll)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var movies = await movieService.GetAllAsync();
+        var userId = HttpContext.GetUserId();
+        var movies = await movieService.GetAllAsync(userId, cancellationToken);
         var moviesResponse = movies.MapToMoviesResponse();
         return Ok(moviesResponse);
     }
@@ -62,10 +66,11 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     // route parameter has id of resource they want to update.
     [Authorize(AuthConstants.TrustedOrAdminUserPolicyName)]
     [HttpPut(ApiEndpoints.Movies.Update)]
-    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateMovieRequest request)
+    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateMovieRequest request, CancellationToken cancellationToken)
     {
+        var userId = HttpContext.GetUserId();
         var movie = request.MapToMovie(id);
-        var updatedMovie = await movieService.UpdateAsync(movie);
+        var updatedMovie = await movieService.UpdateAsync(movie, userId, cancellationToken);
 
         if (updatedMovie is null)
         {
@@ -78,9 +83,9 @@ public class MoviesController(IMovieService movieService) : ControllerBase
 
     [Authorize(AuthConstants.AdminUserPolicyName)]
     [HttpDelete(ApiEndpoints.Movies.Delete)]
-    public async Task<IActionResult> Delete([FromRoute] Guid id)
+    public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var isDeleted = await movieService.DeleteByIdAsync(id);
+        var isDeleted = await movieService.DeleteByIdAsync(id, cancellationToken);
         return isDeleted ? Ok() : NotFound();
     }
 

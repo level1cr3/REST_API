@@ -8,7 +8,7 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
 {
     private readonly List<Movie> _movies = []; // for now this will act as in memory db.
 
-    public async Task<Movie?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Movie?> GetByIdAsync(Guid id, Guid? userid = null, CancellationToken cancellationToken = default)
     {
         using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
 
@@ -46,7 +46,8 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         return movie;
     }
 
-    public async Task<Movie?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
+    public async Task<Movie?> GetBySlugAsync(string slug, Guid? userid = null,
+        CancellationToken cancellationToken = default)
     {
         using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
 
@@ -81,7 +82,8 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
     }
 
 
-    public async Task<IEnumerable<Movie>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Movie>> GetAllAsync(Guid? userid = null,
+        CancellationToken cancellationToken = default)
     {
         using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
 
@@ -166,7 +168,7 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         }
     }
 
-    public async Task<bool> UpdateAsync(Movie movie, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateAsync(Movie movie, Guid? userid = null, CancellationToken cancellationToken = default)
     {
         using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
