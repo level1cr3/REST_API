@@ -10,6 +10,10 @@ public partial class Movie
 
     public required int YearOfRelease { get; set; } // not making init because year of release can change.
 
+    public float? Rating { get; set; }
+    
+    public int? UserRating { get; set; }
+    
     public required List<string> Genres { get; init; } =
         []; // making it init. since it is 'List' it will still allow me to add remove the genres. Because list is mutable data structure.
 

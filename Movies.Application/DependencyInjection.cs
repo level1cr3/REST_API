@@ -6,7 +6,7 @@ using Movies.Application.Services;
 
 namespace Movies.Application;
 
-public static class ApplicationServiceCollectionExtensions
+public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
@@ -15,6 +15,8 @@ public static class ApplicationServiceCollectionExtensions
 
         // services.AddValidatorsFromAssembly(typeof(ApplicationServiceCollectionExtensions).Assembly); // cannot customise ServiceLifetime.
         services.AddValidatorsFromAssemblyContaining<IApplicationMarker>(ServiceLifetime.Singleton); // singleton is safe, because dependence on other singleton and no state.
+
+        services.AddSingleton<IRatingRepository, RatingRepository>();
         return services;
     }
 

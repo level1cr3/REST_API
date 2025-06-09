@@ -8,19 +8,23 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
 {
     private readonly List<Movie> _movies = []; // for now this will act as in memory db.
 
-    public async Task<Movie?> GetByIdAsync(Guid id, Guid? userid = null, CancellationToken cancellationToken = default)
+    public async Task<Movie?> GetByIdAsync(Guid id, Guid? userId = null, CancellationToken cancellationToken = default)
     {
         using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
 
         const string getMovieByIdSql = """
-                                        select * from movies
-                                        where id = @id;
+                                        select m.*, round(avg(r.rating), 1) as rating, myr.rating as userrating
+                                        from movies m
+                                        left join ratings r on r.movieid = m.id        
+                                        left join ratings myr on myr.movieid = m.id and myr.userid = @userId
+                                        where m.id = @id
+                                        group by m.id, myr.rating;
                                        """;
 
         // we don't need limit. because we are querying by id primary key also we are using singleOrDefault
 
         var movie =
-            await connection.QuerySingleOrDefaultAsync<Movie>(new CommandDefinition(getMovieByIdSql, new { id },
+            await connection.QuerySingleOrDefaultAsync<Movie>(new CommandDefinition(getMovieByIdSql, new { id, userId },
                 cancellationToken: cancellationToken));
 
         if (movie is null)
@@ -46,14 +50,18 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         return movie;
     }
 
-    public async Task<Movie?> GetBySlugAsync(string slug, Guid? userid = null,
+    public async Task<Movie?> GetBySlugAsync(string slug, Guid? userId = null,
         CancellationToken cancellationToken = default)
     {
         using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
 
         const string getMovieBySlugSql = """
-                                          select * from movies         
-                                          where slug = @Slug;
+                                          select m.*, round(avg(r.rating), 1) as rating, myr.rating as userrating 
+                                          from movies m        
+                                          left join ratings r on r.movieid = m.id 
+                                          left join ratings myr on myr.movieid = m.id and myr.userid = @userId
+                                          where m.slug = @Slug
+                                          group by m.id, myr.rating;
                                          """;
 
         var movie = await connection.QuerySingleOrDefaultAsync<Movie>(new CommandDefinition(getMovieBySlugSql,
@@ -88,15 +96,19 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
 
         const string getAllMovies = """
-                                     select m.*, g.name AS genre from movies m
-                                     left join genres g on m.id = g.movieid
+                                     select m.*, g.name AS genre, round(avg(r.rating),1) as rating, myr.rating as userrating 
+                                     from movies m
+                                     left join genres g on m.id = g.movieid 
+                                     left join ratings r on r.movieid = m.id
+                                     left join ratings myr on myr.movieid = m.id and myr.userid = @userId
+                                     group by m.id, g.name, myr.rating
                                     """;
 
         var movieDict = new Dictionary<Guid, Movie>();
 
-        await connection.QueryAsync<Movie, string, Movie>(
+        await connection.QueryAsync<Movie, string, float, int, Movie>(
             new CommandDefinition(getAllMovies, cancellationToken: cancellationToken),
-            (movie, genre) =>
+            (movie, genre, rating, userRating) =>
             {
                 if (!movieDict.TryGetValue(movie.Id, out var movieEntry))
                 {
@@ -107,9 +119,11 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
 
                 // this way multiple genres can be added to single movie. because that movie will come from dict
                 movieEntry.Genres.Add(genre);
+                movieEntry.Rating ??= rating;
+                movieEntry.UserRating ??= userRating;
                 return movieEntry;
             },
-            splitOn: "genre"
+            splitOn: "genre,rating,userrating"
         );
 
         return movieDict.Values;
@@ -168,14 +182,14 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         }
     }
 
-    public async Task<bool> UpdateAsync(Movie movie, Guid? userid = null, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateAsync(Movie movie, CancellationToken cancellationToken = default)
     {
         using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
 
         try
         {
-            // we will individually look for what genres was updated,
+            // we will not individually look for what genres was updated,
             // we will go the lazy way by removing all existing genres and add new ones.
 
             const string removeGenresByMovieId = """ delete from genres where movieid = @movieId """;

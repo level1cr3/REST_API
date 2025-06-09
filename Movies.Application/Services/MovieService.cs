@@ -4,7 +4,7 @@ using Movies.Application.Repositories;
 
 namespace Movies.Application.Services;
 
-public sealed class MovieService(IMovieRepository movieRepository, IValidator<Movie> movieValidator) : IMovieService
+public sealed class MovieService(IMovieRepository movieRepository, IRatingRepository ratingRepository, IValidator<Movie> movieValidator) : IMovieService
 {
     public async Task<Movie?> GetByIdAsync(Guid id, Guid? userid = null, CancellationToken cancellationToken = default)
     {
@@ -43,7 +43,20 @@ public sealed class MovieService(IMovieRepository movieRepository, IValidator<Mo
             return null;
         }
 
-        await movieRepository.UpdateAsync(movie, userid, cancellationToken);
+        await movieRepository.UpdateAsync(movie, cancellationToken);
+
+        if (userid.HasValue)
+        {
+            // if userId is there it is good to get user ratings from db as well. because that will be single source of truth.
+            
+            var ratingFromDb = await ratingRepository.GetRatingAsync(movie.Id, userid.Value, cancellationToken);
+            movie.Rating = ratingFromDb.Rating;
+            movie.UserRating = ratingFromDb.UserRating;
+            
+            return movie;
+        }
+        
+        movie.Rating = await ratingRepository.GetRatingAsync(movie.Id, cancellationToken);
         return movie;
     }
 
