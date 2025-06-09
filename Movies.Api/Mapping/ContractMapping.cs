@@ -28,7 +28,9 @@ public static class ContractMapping
             Slug = movie.Slug,
             Title = movie.Title,
             YearOfRelease = movie.YearOfRelease,
-            Genres = movie.Genres
+            Genres = movie.Genres,
+            Rating = movie.Rating,
+            UserRating = movie.UserRating
         };
     }
 

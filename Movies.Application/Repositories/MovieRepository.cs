@@ -90,13 +90,13 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
     }
 
 
-    public async Task<IEnumerable<Movie>> GetAllAsync(Guid? userid = null,
+    public async Task<IEnumerable<Movie>> GetAllAsync(Guid? userId = null,
         CancellationToken cancellationToken = default)
     {
         using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
 
         const string getAllMovies = """
-                                     select m.*, g.name AS genre, round(avg(r.rating),1) as rating, myr.rating as userrating 
+                                     select m.id, m.slug, m.title, m.yearofrelease , g.name AS genre, round(avg(r.rating),1) as rating, myr.rating as userrating 
                                      from movies m
                                      left join genres g on m.id = g.movieid 
                                      left join ratings r on r.movieid = m.id
@@ -106,25 +106,33 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
 
         var movieDict = new Dictionary<Guid, Movie>();
 
-        await connection.QueryAsync<Movie, string, float, int, Movie>(
-            new CommandDefinition(getAllMovies, cancellationToken: cancellationToken),
-            (movie, genre, rating, userRating) =>
-            {
-                if (!movieDict.TryGetValue(movie.Id, out var movieEntry))
+        try
+        {
+            await connection.QueryAsync<Movie, string, float?, int?, Movie>(
+                new CommandDefinition(getAllMovies, new { userId }, cancellationToken: cancellationToken),
+                (movie, genre, rating, userRating) =>
                 {
-                    // movie not in dictionary 
-                    movieEntry = movie;
-                    movieDict.Add(movieEntry.Id, movieEntry);
-                }
+                    if (!movieDict.TryGetValue(movie.Id, out var movieEntry))
+                    {
+                        // movie not in dictionary 
+                        movieEntry = movie;
+                        movieDict.Add(movieEntry.Id, movieEntry);
+                    }
 
-                // this way multiple genres can be added to single movie. because that movie will come from dict
-                movieEntry.Genres.Add(genre);
-                movieEntry.Rating ??= rating;
-                movieEntry.UserRating ??= userRating;
-                return movieEntry;
-            },
-            splitOn: "genre,rating,userrating"
-        );
+                    // this way multiple genres can be added to single movie. because that movie will come from dict
+                    movieEntry.Genres.Add(genre);
+                    movieEntry.Rating ??= rating;
+                    movieEntry.UserRating ??= userRating;
+                    return movieEntry;
+                },
+                splitOn: "genre,rating,userrating"
+            );
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
 
         return movieDict.Values;
     }
