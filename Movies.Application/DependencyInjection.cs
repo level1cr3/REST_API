@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssemblyContaining<IApplicationMarker>(ServiceLifetime.Singleton); // singleton is safe, because dependence on other singleton and no state.
 
         services.AddSingleton<IRatingRepository, RatingRepository>();
+        services.AddSingleton<IRatingService, RatingService>();
         return services;
     }
 

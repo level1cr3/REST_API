@@ -37,4 +37,26 @@ public class RatingRepository(IDbConnectionFactory connectionFactory) : IRatingR
         ));
         
     }
+
+    public async Task<bool> RateMovieAsync(Guid userId, Guid movieId, int rating, CancellationToken cancellationToken = default)
+    {
+        using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
+        
+        const string upsertMovieRatingSql = """
+                                            insert into ratings(userid, movieid, rating) 
+                                            values (@userId, @movieId, @rating)
+                                            on conflict (userid,movieid) do update 
+                                            set rating = @rating
+                                            """;
+        
+        var result = await connection.ExecuteAsync(new CommandDefinition(upsertMovieRatingSql, new { userId, movieId, rating },
+            cancellationToken: cancellationToken));
+
+        return result > 0;
+    }
+    
+    
+    
+    
+    
 }
