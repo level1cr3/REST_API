@@ -3,4 +3,6 @@
 public interface IRatingService
 {
     Task<bool> RateMovieAsync(Guid userId, Guid movieId, int rating, CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteRatingAsync(Guid userId, Guid movieId, CancellationToken cancellationToken = default);
 }
