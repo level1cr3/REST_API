@@ -96,7 +96,7 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
 
         const string getAllMovies = """
-                                     select m.id, m.slug, m.title, m.yearofrelease , g.name AS genre, round(avg(r.rating),1) as rating, myr.rating as userrating 
+                                     select m.*, g.name AS genre, round(avg(r.rating),1) as rating, myr.rating as userrating 
                                      from movies m
                                      left join genres g on m.id = g.movieid 
                                      left join ratings r on r.movieid = m.id
@@ -108,7 +108,7 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
 
         try
         {
-            await connection.QueryAsync<Movie, string, float?, int?, Movie>(
+            await connection.QueryAsync<Movie, string, decimal?, int?, Movie>(
                 new CommandDefinition(getAllMovies, new { userId }, cancellationToken: cancellationToken),
                 (movie, genre, rating, userRating) =>
                 {
@@ -121,7 +121,7 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
 
                     // this way multiple genres can be added to single movie. because that movie will come from dict
                     movieEntry.Genres.Add(genre);
-                    movieEntry.Rating ??= rating;
+                    movieEntry.Rating ??= (float?)rating;
                     movieEntry.UserRating ??= userRating;
                     return movieEntry;
                 },
