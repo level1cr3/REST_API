@@ -1,6 +1,24 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Movies.Api.Extensions;
+using Movies.Api.Routes;
+using Movies.Application.Services;
+using Movies.Contracts.Requests;
+
 namespace Movies.Api.Controllers;
 
-public class RatingsController
+[ApiController]
+public class RatingsController(IRatingService ratingService) : ControllerBase
 {
-    
+    [Authorize]
+    [HttpPut(ApiEndpoints.Movies.Rate)]
+    public async Task<IActionResult> RateMovie([FromRoute] Guid id, [FromBody] RateMovieRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.GetUserId();
+        var result = await ratingService.RateMovieAsync(userId!.Value, id, request.Rating, cancellationToken);
+        // used null-forgiving symbol because. we have Authorize attribute that means userId must be there.
+
+        return result ? Ok() : NotFound();
+    }
 }
