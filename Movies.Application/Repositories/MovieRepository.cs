@@ -65,7 +65,7 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
                                          """;
 
         var movie = await connection.QuerySingleOrDefaultAsync<Movie>(new CommandDefinition(getMovieBySlugSql,
-            new { Slug = slug }, cancellationToken: cancellationToken));
+            new { Slug = slug, userId }, cancellationToken: cancellationToken));
 
         if (movie is null)
         {
