@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Movies.Api.Extensions;
+using Movies.Api.Mapping;
 using Movies.Api.Routes;
 using Movies.Application.Services;
 using Movies.Contracts.Requests;
@@ -29,6 +30,17 @@ public class RatingsController(IRatingService ratingService) : ControllerBase
         var userId = HttpContext.GetUserId();
         var result = await ratingService.DeleteRatingAsync(userId!.Value,id,cancellationToken);
         return result ? Ok() : NotFound();
+    }
+
+    [Authorize]
+    [HttpGet(ApiEndpoints.Ratings.GetUserRatings)]
+    public async Task<IActionResult> GetUserRatings(CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.GetUserId();
+        var movieRatings = await ratingService.GetAllRatingsForUserAsync(userId!.Value, cancellationToken);
+        var movieRatingResponse = movieRatings.MapToMovieRatingResponse();
+        
+        return Ok(movieRatingResponse);
     }
 
 
