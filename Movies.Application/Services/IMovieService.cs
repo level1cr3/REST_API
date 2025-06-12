@@ -8,7 +8,7 @@ public interface IMovieService
     
     Task<Movie?> GetBySlugAsync(string slug, Guid? userid = null, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<Movie>> GetAllAsync(Guid? userid = null, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Movie>> GetAllAsync(GetAllMoviesOptions options, CancellationToken cancellationToken = default);
 
     Task<bool> CreateAsync(Movie movie, CancellationToken cancellationToken = default); // default value here is CancellationToken.None
 

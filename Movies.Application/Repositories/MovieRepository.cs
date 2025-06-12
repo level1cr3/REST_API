@@ -90,17 +90,22 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
     }
 
 
-    public async Task<IEnumerable<Movie>> GetAllAsync(Guid? userId = null,
+    public async Task<IEnumerable<Movie>> GetAllAsync(GetAllMoviesOptions options,
         CancellationToken cancellationToken = default)
     {
         using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
-
+        
+        //other sql pattern options : where (@title is null or m.title like @pattern)
+        // when passing the parameter : new {pattern=$"%{options.Title}%"}
+        
         const string getAllMovies = """
                                      select m.*, g.name AS genre, round(avg(r.rating),1) as rating, myr.rating as userrating 
                                      from movies m
                                      left join genres g on m.id = g.movieid 
                                      left join ratings r on r.movieid = m.id
                                      left join ratings myr on myr.movieid = m.id and myr.userid = @userId
+                                     where (@title is null or lower(trim(m.title)) like('%'|| @title ||'%')) and
+                                           (@yearOfRelease is null or m.yearofrelease = @yearOfRelease)
                                      group by m.id, g.name, myr.rating
                                     """;
 
@@ -109,7 +114,14 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         try
         {
             await connection.QueryAsync<Movie, string, decimal?, int?, Movie>(
-                new CommandDefinition(getAllMovies, new { userId }, cancellationToken: cancellationToken),
+                new CommandDefinition(getAllMovies,
+                    new
+                    {
+                        userId = options.UserId,
+                        title = options.Title,
+                        yearOfRelease = options.Year
+                    },
+                    cancellationToken: cancellationToken),
                 (movie, genre, rating, userRating) =>
                 {
                     if (!movieDict.TryGetValue(movie.Id, out var movieEntry))

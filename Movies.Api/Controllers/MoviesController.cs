@@ -53,10 +53,11 @@ public class MoviesController(IMovieService movieService) : ControllerBase
 
     // it important to not expose domain object outside. and only use contracts. for request and response. Because contract are supposed to be fixed.
     [HttpGet(ApiEndpoints.Movies.GetAll)]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] GetAllMoviesRequest request, CancellationToken cancellationToken)
     {
         var userId = HttpContext.GetUserId();
-        var movies = await movieService.GetAllAsync(userId, cancellationToken);
+        var options = request.MapToMoviesOptions().WithUser(userId);
+        var movies = await movieService.GetAllAsync(options, cancellationToken);
         var moviesResponse = movies.MapToMoviesResponse();
         return Ok(moviesResponse);
     }

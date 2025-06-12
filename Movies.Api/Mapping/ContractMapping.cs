@@ -61,5 +61,20 @@ public static class ContractMapping
             Rating = m.Rating
         });
     }
-    
+
+    public static GetAllMoviesOptions MapToMoviesOptions(this GetAllMoviesRequest request)
+    {
+        return new GetAllMoviesOptions
+        {
+            Title = request.Title,
+            Year = request.Year
+        };
+    }
+
+    public static GetAllMoviesOptions WithUser(this GetAllMoviesOptions options, Guid? userId)
+    {
+        options.UserId = userId;
+        return options;
+    }
+
 }
