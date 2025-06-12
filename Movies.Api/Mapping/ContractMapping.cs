@@ -67,7 +67,24 @@ public static class ContractMapping
         return new GetAllMoviesOptions
         {
             Title = request.Title,
-            Year = request.Year
+            Year = request.YearOfRelease,
+            SortField = request.SortBy?.Trim('+','-'),
+            
+            /* 
+             nested ternary is bad.
+            SortOrder = request.SortBy is null
+                ? SortOrder.Unsorted
+                : request.SortBy.StartsWith('-')
+                    ? SortOrder.Descending
+                    : SortOrder.Ascending
+            */
+            
+            SortOrder = request.SortBy switch
+            {
+                null => SortOrder.Unsorted,
+                var sort when sort.StartsWith('-') => SortOrder.Descending,
+                _ => SortOrder.Ascending
+            }
         };
     }
 
@@ -78,3 +95,14 @@ public static class ContractMapping
     }
 
 }
+
+
+/*
+ 
+var sort            // 1. Declares a variable 'sort'
+when               // 2. Introduces a condition
+sort.StartsWith('-') // 3. The condition to check
+=>                 // 4. Arrow syntax for the result
+SortOrder.Descending // 5. The value to return if condition is true
+ 
+*/

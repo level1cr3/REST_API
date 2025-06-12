@@ -97,17 +97,30 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         
         //other sql pattern options : where (@title is null or m.title like @pattern)
         // when passing the parameter : new {pattern=$"%{options.Title}%"}
+
+        var orderClause = string.Empty;
+
+        if (options.SortField is not null)
+        {
+            // sortOrder cannot be unordered because sortField is not null inside this if block
+            // sanitize the SortField. before sending here.
+            
+            orderClause = $"""
+                            , {options.SortField}
+                           order by {options.SortField} {(options.SortOrder == SortOrder.Ascending ? "asc" : "desc" )}
+                           """;
+        }
         
-        const string getAllMovies = """
-                                     select m.*, g.name AS genre, round(avg(r.rating),1) as rating, myr.rating as userrating 
-                                     from movies m
-                                     left join genres g on m.id = g.movieid 
-                                     left join ratings r on r.movieid = m.id
-                                     left join ratings myr on myr.movieid = m.id and myr.userid = @userId
-                                     where (@title is null or lower(trim(m.title)) like('%'|| @title ||'%')) and
-                                           (@yearOfRelease is null or m.yearofrelease = @yearOfRelease)
-                                     group by m.id, g.name, myr.rating
-                                    """;
+        var getAllMovies = $"""
+                             select m.*, g.name AS genre, round(avg(r.rating),1) as rating, myr.rating as userrating 
+                             from movies m
+                             left join genres g on m.id = g.movieid 
+                             left join ratings r on r.movieid = m.id
+                             left join ratings myr on myr.movieid = m.id and myr.userid = @userId
+                             where (@title is null or lower(trim(m.title)) like('%'|| @title ||'%')) and
+                                   (@yearOfRelease is null or m.yearofrelease = @yearOfRelease)
+                             group by m.id, g.name, myr.rating {orderClause}
+                            """;
 
         var movieDict = new Dictionary<Guid, Movie>();
 
