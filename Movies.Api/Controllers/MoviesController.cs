@@ -53,12 +53,14 @@ public class MoviesController(IMovieService movieService) : ControllerBase
 
     // it important to not expose domain object outside. and only use contracts. for request and response. Because contract are supposed to be fixed.
     [HttpGet(ApiEndpoints.Movies.GetAll)]
-    public async Task<IActionResult> GetAll([FromQuery] GetAllMoviesRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] GetAllMoviesRequest request,
+        CancellationToken cancellationToken)
     {
         var userId = HttpContext.GetUserId();
         var options = request.MapToMoviesOptions().WithUser(userId);
         var movies = await movieService.GetAllAsync(options, cancellationToken);
-        var moviesResponse = movies.MapToMoviesResponse();
+        var totalCount = await movieService.GetCountAsync(options.Title, options.Year, cancellationToken);
+        var moviesResponse = movies.MapToMoviesResponse(options.Page,options.PageSize,totalCount);
         return Ok(moviesResponse);
     }
 
@@ -67,7 +69,8 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     // route parameter has id of resource they want to update.
     [Authorize(AuthConstants.TrustedOrAdminUserPolicyName)]
     [HttpPut(ApiEndpoints.Movies.Update)]
-    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateMovieRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateMovieRequest request,
+        CancellationToken cancellationToken)
     {
         var userId = HttpContext.GetUserId();
         var movie = request.MapToMovie(id);

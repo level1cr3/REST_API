@@ -15,6 +15,8 @@ public interface IMovieService
     Task<Movie?> UpdateAsync(Movie movie, Guid? userid = null, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    
+    Task<int> GetCountAsync(string? title, int? yearofrelease, CancellationToken cancellationToken = default);
 }
 
 // If we had DTO's we would take them as the input and return output as DTO's

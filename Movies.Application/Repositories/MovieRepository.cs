@@ -94,7 +94,7 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         CancellationToken cancellationToken = default)
     {
         using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
-        
+
         //other sql pattern options : where (@title is null or m.title like @pattern)
         // when passing the parameter : new {pattern=$"%{options.Title}%"}
 
@@ -104,13 +104,13 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
         {
             // sortOrder cannot be unordered because sortField is not null inside this if block
             // sanitize the SortField. before sending here.
-            
+
             orderClause = $"""
                             , {options.SortField}
-                           order by {options.SortField} {(options.SortOrder == SortOrder.Ascending ? "asc" : "desc" )}
+                           order by {options.SortField} {(options.SortOrder == SortOrder.Ascending ? "asc" : "desc")}
                            """;
         }
-        
+
         var getAllMovies = $"""
                              select m.*, g.name AS genre, round(avg(r.rating),1) as rating, myr.rating as userrating 
                              from movies m
@@ -120,6 +120,8 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
                              where (@title is null or lower(trim(m.title)) like('%'|| @title ||'%')) and
                                    (@yearOfRelease is null or m.yearofrelease = @yearOfRelease)
                              group by m.id, g.name, myr.rating {orderClause}
+                             limit @pageSize
+                             offset @pageOffset
                             """;
 
         var movieDict = new Dictionary<Guid, Movie>();
@@ -132,7 +134,9 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
                     {
                         userId = options.UserId,
                         title = options.Title,
-                        yearOfRelease = options.Year
+                        yearOfRelease = options.Year,
+                        pageSize = options.PageSize,
+                        pageOffset = (options.Page - 1) * options.PageSize
                     },
                     cancellationToken: cancellationToken),
                 (movie, genre, rating, userRating) =>
@@ -311,6 +315,26 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
 
         return result;
     }
+
+    public async Task<int> GetCountAsync(string? title, int? yearofrelease,
+        CancellationToken cancellationToken = default)
+    {
+        using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
+
+        const string getMoviesCountSql = """
+                                         select count(*) from movies
+                                         where (@title is null or @title like @pattern) 
+                                           and (@yearofrelease is null or yearofrelease = @yearofrelease)
+                                               
+                                         """;
+        var moviesCount = await connection.ExecuteScalarAsync<int>(new CommandDefinition(getMoviesCountSql,
+            new { title, pattern = $"%{title}%" ,yearofrelease },
+            cancellationToken: cancellationToken));
+
+        return moviesCount;
+    }
+    
+    
 }
 
 

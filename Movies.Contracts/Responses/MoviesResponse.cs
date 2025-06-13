@@ -1,6 +1,6 @@
 namespace Movies.Contracts.Responses;
 
-public record MoviesResponse
+public record MoviesResponse : PagedResponse<MovieResponse>
 {
-    public required IEnumerable<MovieResponse> Items { get; init; } = [];
-}
+    
+}   
