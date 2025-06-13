@@ -90,81 +90,56 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
     }
 
 
-    public async Task<IEnumerable<Movie>> GetAllAsync(GetAllMoviesOptions options,
-        CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Movie>> GetAllAsync(GetAllMoviesOptions options, CancellationToken token = default)
     {
-        using var connection = await connectionFactory.CreateConnectionAsync(cancellationToken);
-
-        //other sql pattern options : where (@title is null or m.title like @pattern)
-        // when passing the parameter : new {pattern=$"%{options.Title}%"}
+        using var connection = await connectionFactory.CreateConnectionAsync(token);
 
         var orderClause = string.Empty;
 
         if (options.SortField is not null)
         {
-            // sortOrder cannot be unordered because sortField is not null inside this if block
-            // sanitize the SortField. before sending here.
-
             orderClause = $"""
-                            , {options.SortField}
-                           order by {options.SortField} {(options.SortOrder == SortOrder.Ascending ? "asc" : "desc")}
+                           , m.{options.SortField}
+                           order by m.{options.SortField} {(options.SortOrder == SortOrder.Ascending ? "asc" : "desc")}
                            """;
         }
 
-        var getAllMovies = $"""
-                             select m.*, g.name AS genre, round(avg(r.rating),1) as rating, myr.rating as userrating 
-                             from movies m
-                             left join genres g on m.id = g.movieid 
-                             left join ratings r on r.movieid = m.id
-                             left join ratings myr on myr.movieid = m.id and myr.userid = @userId
-                             where (@title is null or lower(trim(m.title)) like('%'|| @title ||'%')) and
-                                   (@yearOfRelease is null or m.yearofrelease = @yearOfRelease)
-                             group by m.id, g.name, myr.rating {orderClause}
-                             limit @pageSize
-                             offset @pageOffset
-                            """;
+        var result = await connection.QueryAsync(
+            new CommandDefinition($"""
+                                   select m.*, 
+                                          string_agg(distinct g.name, ',') as genres , 
+                                          round(avg(r.rating), 1) as rating, 
+                                          myr.rating as userrating
+                                   from movies m 
+                                   left join genres g on m.id = g.movieid
+                                   left join ratings r on m.id = r.movieid
+                                   left join ratings myr on m.id = myr.movieid
+                                   and myr.userid = @userId
+                                   where (@title is null or m.title like ('%' || @title || '%'))
+                                   and (@yearofrelease is null or m.yearofrelease = @yearofrelease)
+                                   group by id, userrating {orderClause}
+                                   limit @pageSize
+                                   offset @pageOffset
+                                   """, new
+            {
+                userId = options.UserId,
+                title = options.Title,
+                yearofrelease = options.Year,
+                pageSize = options.PageSize,
+                pageOffset = (options.Page - 1) * options.PageSize
+            }, cancellationToken: token));
 
-        var movieDict = new Dictionary<Guid, Movie>();
-
-        try
+        return result.Select(x => new Movie
         {
-            await connection.QueryAsync<Movie, string, decimal?, int?, Movie>(
-                new CommandDefinition(getAllMovies,
-                    new
-                    {
-                        userId = options.UserId,
-                        title = options.Title,
-                        yearOfRelease = options.Year,
-                        pageSize = options.PageSize,
-                        pageOffset = (options.Page - 1) * options.PageSize
-                    },
-                    cancellationToken: cancellationToken),
-                (movie, genre, rating, userRating) =>
-                {
-                    if (!movieDict.TryGetValue(movie.Id, out var movieEntry))
-                    {
-                        // movie not in dictionary 
-                        movieEntry = movie;
-                        movieDict.Add(movieEntry.Id, movieEntry);
-                    }
-
-                    // this way multiple genres can be added to single movie. because that movie will come from dict
-                    movieEntry.Genres.Add(genre);
-                    movieEntry.Rating ??= (float?)rating;
-                    movieEntry.UserRating ??= userRating;
-                    return movieEntry;
-                },
-                splitOn: "genre,rating,userrating"
-            );
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-
-        return movieDict.Values;
+            Id = x.id,
+            Title = x.title,
+            YearOfRelease = x.yearofrelease,
+            Rating = (float?)x.rating,
+            UserRating = (int?)x.userrating,
+            Genres = Enumerable.ToList(x.genres.Split(','))
+        });
     }
+
 
     public async Task<bool> CreateAsync(Movie movie, CancellationToken cancellationToken = default)
     {
@@ -328,13 +303,11 @@ internal sealed class MovieRepository(IDbConnectionFactory connectionFactory) : 
                                                
                                          """;
         var moviesCount = await connection.ExecuteScalarAsync<int>(new CommandDefinition(getMoviesCountSql,
-            new { title, pattern = $"%{title}%" ,yearofrelease },
+            new { title, pattern = $"%{title}%", yearofrelease },
             cancellationToken: cancellationToken));
 
         return moviesCount;
     }
-    
-    
 }
 
 
