@@ -1,6 +1,6 @@
 namespace Movies.Contracts.Responses;
 
-public record MovieResponse
+public record MovieResponse : HalResponse
 {
     public required Guid Id { get; init; }
 

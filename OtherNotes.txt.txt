@@ -96,3 +96,7 @@ Let me know if you want code examples!
 > IF we see the api endpoints so far. we see that 'Movies' is our resource. and we can get this resource, update and delete etc.
 > Now rating are directly attached to the movies they are not independent ressource. We are going to get the ratings for the movie 
 > So in our case they will live inside the movies.
+
+
+- HATEOAS Don't use it.
+> It is purely done on the controller level. we don't dive deep into application layer.
