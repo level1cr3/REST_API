@@ -1,4 +1,5 @@
 using System.Text;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Movies.Api.Constants;
@@ -77,6 +78,21 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 //  Multiple handlers can be added and they're called by the middleware in the order they're added
 // this is the middleware btw app.UseExceptionHandler(); 
+
+
+// versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(3.0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    // options.ApiVersionReader = new HeaderApiVersionReader("api-version"); having request header api versioning.
+    
+    
+    options.ApiVersionReader = new MediaTypeApiVersionReader("api-version"); // send with accept header this is standard follow this
+    
+    // ai says to go with url segment. for versioning.
+}).AddMvc();// this will mvc core that is needed by the package.
 
 var app = builder.Build();
 
