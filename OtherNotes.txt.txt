@@ -100,3 +100,30 @@ Let me know if you want code examples!
 
 - HATEOAS Don't use it.
 > It is purely done on the controller level. we don't dive deep into application layer.
+
+- what is versioning ?
+> Once we release our API it is out there being consumed and we can't really introduce a braking changes to our contracts.
+> If we want to make breaking changes. We have to introduce new version.
+> URL based versioning the versionn is on the URL
+> we don't want to over version. we should be careful with our vesioning because clients are very slow in terms of migrating to the new version.
+> Even if you deprecate a version of your API we have to support it for the long time in case people don't want to move into a new version.
+> Nobody want's to move if nothing breaks into their end.
+> URL segment base versioning is very propular.
+
+
+> Avoid Code Bloat: Versioning services and repositories would create massive duplication and maintenance overhead.
+
+> Single Source of Truth: Your business logic and data access should remain consistent. The versioning is about how you present data to clients, not how you process it internally.
+
+- When You Might Need Service Changes
+> If you absolutely need different business logic for different versions:
+
+> Add parameters to existing methods rather than creating new services
+> Use feature flags or strategy patterns within the same service
+> Create specialized mapper classes to handle the transformation between versions
+
+> This keeps your core business logic clean while allowing flexibility at the presentation layer.
+
+
+
+

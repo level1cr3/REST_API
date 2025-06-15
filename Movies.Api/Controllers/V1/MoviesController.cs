@@ -4,19 +4,17 @@ using Movies.Api.Constants;
 using Movies.Api.Extensions;
 using Movies.Api.Mapping;
 using Movies.Api.Routes;
-using Movies.Application.Models;
-using Movies.Application.Repositories;
 using Movies.Application.Services;
-using Movies.Contracts.Requests;
-using Movies.Contracts.Responses;
+using Movies.Contracts.Requests.V1;
+using Movies.Contracts.Responses.V1;
 
-namespace Movies.Api.Controllers;
+namespace Movies.Api.Controllers.V1;
 
 [ApiController]
 public class MoviesController(IMovieService movieService) : ControllerBase
 {
     [Authorize(AuthConstants.TrustedOrAdminUserPolicyName)]
-    [HttpPost(ApiEndpoints.Movies.Create)] // this way i don't have to use route attribute explicitly.
+    [HttpPost(ApiEndpoints.V1.Movies.Create)] // this way i don't have to use route attribute explicitly.
     public async Task<IActionResult> Create([FromBody] CreateMovieRequest request, CancellationToken cancellationToken)
     {
         var movie = request.MapToMovie();
@@ -33,7 +31,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
         // provides us with full contextual location of the item.
     }
 
-    [HttpGet(ApiEndpoints.Movies.Get)]
+    [HttpGet(ApiEndpoints.V1.Movies.Get)]
     public async Task<IActionResult> Get([FromRoute] string idOrSlug, [FromServices] LinkGenerator linkGenerator,
         CancellationToken cancellationToken)
     {
@@ -73,7 +71,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     }
 
     // it important to not expose domain object outside. and only use contracts. for request and response. Because contract are supposed to be fixed.
-    [HttpGet(ApiEndpoints.Movies.GetAll)]
+    [HttpGet(ApiEndpoints.V1.Movies.GetAll)]
     public async Task<IActionResult> GetAll([FromQuery] GetAllMoviesRequest request,
         CancellationToken cancellationToken)
     {
@@ -89,7 +87,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     // update has both route parameter and request body
     // route parameter has id of resource they want to update.
     [Authorize(AuthConstants.TrustedOrAdminUserPolicyName)]
-    [HttpPut(ApiEndpoints.Movies.Update)]
+    [HttpPut(ApiEndpoints.V1.Movies.Update)]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateMovieRequest request,
         CancellationToken cancellationToken)
     {
@@ -107,7 +105,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     }
 
     [Authorize(AuthConstants.AdminUserPolicyName)]
-    [HttpDelete(ApiEndpoints.Movies.Delete)]
+    [HttpDelete(ApiEndpoints.V1.Movies.Delete)]
     public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var isDeleted = await movieService.DeleteByIdAsync(id, cancellationToken);

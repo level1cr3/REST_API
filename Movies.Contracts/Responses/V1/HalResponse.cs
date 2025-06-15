@@ -1,7 +1,6 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace Movies.Contracts.Responses;
+namespace Movies.Contracts.Responses.V1;
 
 public abstract record HalResponse
 {

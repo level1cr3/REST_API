@@ -7,39 +7,80 @@ public static class ApiEndpoints
     private const string
         ApiBase = "api"; // it is good to have "api" as base point. Because it can me mapped in many ways load balancers can use it exclude things.
 
-    public static class Movies
+    public static class V1
     {
-        private const string Base = $"{ApiBase}/Movies";
+        private const string VersionBase = $"{ApiBase}/v1";
 
-        public const string Create = Base;
+        public static class Movies
+        {
+            private const string Base = $"{VersionBase}/Movies";
 
-        public const string
-            Get = $"{Base}/{{idOrSlug}}"; // using double {{ to escape one. this is route parameter. using constraint so only guid can be used.
+            public const string Create = Base;
 
-        public const string GetAll = Base;
-        public const string Update = $"{Base}/{{id:guid}}";
-        public const string Delete = $"{Base}/{{id:guid}}";
-        
-        // rating are directly attached to the movies they are not independent resource. We are going to get the ratings for the movie
-        // that is why they will live inside the movies.
+            public const string
+                Get = $"{Base}/{{idOrSlug}}"; // using double {{ to escape one. this is route parameter. using constraint so only guid can be used.
 
-        public const string Rate = $"{Base}/{{id:guid}}/ratings"; // create rating for single movie.
-        public const string DeleteRating = $"{Base}/{{id:guid}}/ratings"; // delete rating for single movie.
-        
+            public const string GetAll = Base;
+            public const string Update = $"{Base}/{{id:guid}}";
+            public const string Delete = $"{Base}/{{id:guid}}";
+
+            // rating are directly attached to the movies they are not independent resource. We are going to get the ratings for the movie
+            // that is why they will live inside the movies.
+
+            public const string Rate = $"{Base}/{{id:guid}}/ratings"; // create rating for single movie.
+            public const string DeleteRating = $"{Base}/{{id:guid}}/ratings"; // delete rating for single movie.
+        }
+
+        public static class Ratings
+        {
+            // to get all the ratings for a user
+            // this is different and should live in ratings
+
+            private const string Base = $"{VersionBase}/ratings"; // here ratings are the main resource.
+
+            public const string GetUserRatings = $"{Base}/me"; // get my ratings.
+
+            // this 'me' wording is very common in the rest api. It is used when you want to get something about the logged-in user.
+        }
     }
+
+
+    public static class V2
+    {
+        private const string VersionBase = $"{ApiBase}/v2";
+
+        public static class Movies
+        {
+            private const string Base = $"{VersionBase}/Movies";
+
+            public const string Create = Base;
+
+            public const string
+                Get = $"{Base}/{{idOrSlug}}"; // using double {{ to escape one. this is route parameter. using constraint so only guid can be used.
+
+            public const string GetAll = Base;
+            public const string Update = $"{Base}/{{id:guid}}";
+            public const string Delete = $"{Base}/{{id:guid}}";
+
+            // rating are directly attached to the movies they are not independent resource. We are going to get the ratings for the movie
+            // that is why they will live inside the movies.
+
+            public const string Rate = $"{Base}/{{id:guid}}/ratings"; // create rating for single movie.
+            public const string DeleteRating = $"{Base}/{{id:guid}}/ratings"; // delete rating for single movie.
+        }
+
+        public static class Ratings
+        {
+            // to get all the ratings for a user
+            // this is different and should live in ratings
+
+            private const string Base = $"{VersionBase}/ratings"; // here ratings are the main resource.
+
+            public const string GetUserRatings = $"{Base}/me"; // get my ratings.
+
+            // this 'me' wording is very common in the rest api. It is used when you want to get something about the logged-in user.
+        }
+    }
+
     
-    public static class Ratings
-    {
-        // to get all the ratings for a user
-        // this is different and should live in ratings
-        
-        private const string Base = $"{ApiBase}/ratings"; // here ratings are the main resource.
-
-        public const string GetUserRatings = $"{Base}/me"; // get my ratings.
-        
-        // this 'me' wording is very common in the rest api. It is used when you want to get something about the logged-in user.
-
-
-
-    }
 }
