@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Movies.Api.Constants;
 using Movies.Api.Extensions;
@@ -10,6 +11,8 @@ using Movies.Contracts.Responses.V1;
 
 namespace Movies.Api.Controllers.V1;
 
+[ApiVersion(1.0)]
+[ApiVersion(2.0)]
 [ApiController]
 public class MoviesController(IMovieService movieService) : ControllerBase
 {
@@ -31,6 +34,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
         // provides us with full contextual location of the item.
     }
 
+    [MapToApiVersion(1.0)]
     [HttpGet(ApiEndpoints.V1.Movies.Get)]
     public async Task<IActionResult> Get([FromRoute] string idOrSlug, [FromServices] LinkGenerator linkGenerator,
         CancellationToken cancellationToken)
@@ -69,7 +73,8 @@ public class MoviesController(IMovieService movieService) : ControllerBase
         
         return Ok(movieResponse);
     }
-
+    
+    
     // it important to not expose domain object outside. and only use contracts. for request and response. Because contract are supposed to be fixed.
     [HttpGet(ApiEndpoints.V1.Movies.GetAll)]
     public async Task<IActionResult> GetAll([FromQuery] GetAllMoviesRequest request,

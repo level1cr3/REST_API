@@ -1,12 +1,15 @@
 using System.Text;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Movies.Api.Constants;
 using Movies.Api.Middleware;
+using Movies.Api.Swagger;
 using Movies.Application;
 using Movies.Application.Database;
 using Movies.Application.Repositories;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,21 +86,27 @@ builder.Services.AddProblemDetails();
 // versioning
 builder.Services.AddApiVersioning(options =>
 {
-    options.DefaultApiVersion = new ApiVersion(3.0);
+    options.DefaultApiVersion = new ApiVersion(1.0);
     options.AssumeDefaultVersionWhenUnspecified = true;
     options.ReportApiVersions = true;
     // options.ApiVersionReader = new HeaderApiVersionReader("api-version"); having request header api versioning.
     
     
     options.ApiVersionReader = new MediaTypeApiVersionReader("api-version"); // send with accept header this is standard follow this
-    
+
+    // options.ApiVersionReader = new UrlSegmentApiVersionReader();
     // ai says to go with url segment. for versioning.
-}).AddMvc();// this will mvc core that is needed by the package.
+}).AddMvc().AddApiExplorer();// this will mvc core that is needed by the package.
 
 
 // add swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOption>();
+builder.Services.AddSwaggerGen(option =>
+{
+    option.OperationFilter<SwaggerDefaultValues>();
+});
 
 var app = builder.Build();
 
@@ -110,7 +119,13 @@ if (app.Environment.IsDevelopment())
 
     // this can also be outside of development based on your requirements
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(option =>
+    {
+        foreach (var apiVersionDescription in app.DescribeApiVersions())
+        {
+            option.SwaggerEndpoint($"/swagger/{apiVersionDescription.GroupName}/swagger.json", apiVersionDescription.GroupName);
+        }
+    });
 }
 
 app.UseHttpsRedirection();
