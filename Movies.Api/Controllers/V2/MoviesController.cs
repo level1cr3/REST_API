@@ -5,16 +5,18 @@ using Movies.Api.Extensions;
 using Movies.Api.Mapping;
 using Movies.Api.Routes;
 using Movies.Application.Services;
+using Movies.Contracts.Responses.V1;
 
 namespace Movies.Api.Controllers.V2;
 
 [ApiVersion(2.0)]
-// [ApiVersion(3.0)]
 [ApiController]
 public class MoviesController(IMovieService movieService) : ControllerBase
 {
-    [MapToApiVersion(2.0)]
+
     [HttpGet(ApiEndpoints.V2.Movies.Get)]
+    [ProducesResponseType(typeof(MovieResponse),StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetV2([FromRoute] string idOrSlug,
         CancellationToken cancellationToken)
     {
@@ -32,26 +34,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
         var movieResponse = movie.MapToMovieResponse();
         return Ok(movieResponse);
     }
-
-    // [MapToApiVersion(3.0)]
-    // [HttpGet(ApiEndpoints.V2.Movies.Get)]
-    // public async Task<IActionResult> GetV3([FromRoute] string idOrSlug,
-    //     CancellationToken cancellationToken)
-    // {
-    //     var userId = HttpContext.GetUserId();
-    //
-    //     var movie = Guid.TryParse(idOrSlug, out var id)
-    //         ? await movieService.GetByIdAsync(id, userId, cancellationToken)
-    //         : await movieService.GetBySlugAsync(idOrSlug, userId, cancellationToken);
-    //
-    //     if (movie is null)
-    //     {
-    //         return NotFound();
-    //     }
-    //
-    //     var movieResponse = movie.MapToMovieResponse();
-    //     return Ok(movieResponse);
-    // }
+    
 }
 
 // you cannot mark api endpoint as deprecated if that api-version is the default version in program.cs
