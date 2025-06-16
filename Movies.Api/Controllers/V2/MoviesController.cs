@@ -8,31 +8,32 @@ using Movies.Application.Services;
 
 namespace Movies.Api.Controllers.V2;
 
-// [ApiVersion(3.0)] we can set it on controller level as well.
+// [ApiVersion(2.0, Deprecated = true)]
+[ApiVersion(3.0)]
 [ApiController]
 public class MoviesController(IMovieService movieService) : ControllerBase
 {
-    [ApiVersion(2.0, Deprecated = true)]
-    [HttpGet(ApiEndpoints.V2.Movies.Get)]
-    public async Task<IActionResult> GetV2([FromRoute] string idOrSlug,
-        CancellationToken cancellationToken)
-    {
-        var userId = HttpContext.GetUserId();
+    // [MapToApiVersion(2.0)]
+    // [HttpGet(ApiEndpoints.V2.Movies.Get)]
+    // public async Task<IActionResult> GetV2([FromRoute] string idOrSlug,
+    //     CancellationToken cancellationToken)
+    // {
+    //     var userId = HttpContext.GetUserId();
+    //
+    //     var movie = Guid.TryParse(idOrSlug, out var id)
+    //         ? await movieService.GetByIdAsync(id, userId, cancellationToken)
+    //         : await movieService.GetBySlugAsync(idOrSlug, userId, cancellationToken);
+    //
+    //     if (movie is null)
+    //     {
+    //         return NotFound();
+    //     }
+    //
+    //     var movieResponse = movie.MapToMovieResponse();
+    //     return Ok(movieResponse);
+    // }
 
-        var movie = Guid.TryParse(idOrSlug, out var id)
-            ? await movieService.GetByIdAsync(id, userId, cancellationToken)
-            : await movieService.GetBySlugAsync(idOrSlug, userId, cancellationToken);
-
-        if (movie is null)
-        {
-            return NotFound();
-        }
-
-        var movieResponse = movie.MapToMovieResponse();
-        return Ok(movieResponse);
-    }
-
-    [ApiVersion(3.0)]
+    [MapToApiVersion(3.0)]
     [HttpGet(ApiEndpoints.V2.Movies.Get)]
     public async Task<IActionResult> GetV3([FromRoute] string idOrSlug,
         CancellationToken cancellationToken)

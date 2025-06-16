@@ -94,6 +94,11 @@ builder.Services.AddApiVersioning(options =>
     // ai says to go with url segment. for versioning.
 }).AddMvc();// this will mvc core that is needed by the package.
 
+
+// add swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
@@ -101,7 +106,11 @@ app.UseExceptionHandler();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    // app.MapOpenApi();
+
+    // this can also be outside of development based on your requirements
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

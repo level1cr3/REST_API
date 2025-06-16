@@ -126,4 +126,14 @@ Let me know if you want code examples!
 
 
 
+- what is swagger or now open api ?
+> It is a way for describing language agnostic rest API and It is all about the specification.
+> It allows both human and computer to understand the capability of the rest api.
+> In terms of what is can and cannot do. and What contracts look like. using standardize format.
+> main goal is to minize the time needed to document the api.
 
+> Open api referes to the specification it self.
+> Swagger now a days refers to family of open source tooling and everything around that aspect of openapi.
+
+> open api = specification.
+> swagger is tooling around open api.
