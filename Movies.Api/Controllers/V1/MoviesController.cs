@@ -12,12 +12,13 @@ using Movies.Contracts.Responses.V1;
 namespace Movies.Api.Controllers.V1;
 
 [ApiVersion(1.0)]
-[ApiVersion(2.0)]
 [ApiController]
 public class MoviesController(IMovieService movieService) : ControllerBase
 {
     [Authorize(AuthConstants.TrustedOrAdminUserPolicyName)]
     [HttpPost(ApiEndpoints.V1.Movies.Create)] // this way i don't have to use route attribute explicitly.
+    [ProducesResponseType(typeof(MovieResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CreateMovieRequest request, CancellationToken cancellationToken)
     {
         var movie = request.MapToMovie();
@@ -34,8 +35,10 @@ public class MoviesController(IMovieService movieService) : ControllerBase
         // provides us with full contextual location of the item.
     }
 
-    [MapToApiVersion(1.0)]
+    
     [HttpGet(ApiEndpoints.V1.Movies.Get)]
+    [ProducesResponseType(typeof(MovieResponse),StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get([FromRoute] string idOrSlug, [FromServices] LinkGenerator linkGenerator,
         CancellationToken cancellationToken)
     {
@@ -77,6 +80,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     
     // it important to not expose domain object outside. and only use contracts. for request and response. Because contract are supposed to be fixed.
     [HttpGet(ApiEndpoints.V1.Movies.GetAll)]
+    [ProducesResponseType(typeof(MoviesResponse),StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] GetAllMoviesRequest request,
         CancellationToken cancellationToken)
     {
@@ -93,6 +97,9 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     // route parameter has id of resource they want to update.
     [Authorize(AuthConstants.TrustedOrAdminUserPolicyName)]
     [HttpPut(ApiEndpoints.V1.Movies.Update)]
+    [ProducesResponseType(typeof(MovieResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails),StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateMovieRequest request,
         CancellationToken cancellationToken)
     {
@@ -111,6 +118,8 @@ public class MoviesController(IMovieService movieService) : ControllerBase
 
     [Authorize(AuthConstants.AdminUserPolicyName)]
     [HttpDelete(ApiEndpoints.V1.Movies.Delete)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var isDeleted = await movieService.DeleteByIdAsync(id, cancellationToken);
