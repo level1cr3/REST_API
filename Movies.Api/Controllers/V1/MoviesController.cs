@@ -36,9 +36,10 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     }
 
     
-    [HttpGet(ApiEndpoints.V1.Movies.Get)]
+    [HttpGet(ApiEndpoints.V1.Movies.Get)] // method HTTPGET needs to be added for response cache.
     [ProducesResponseType(typeof(MovieResponse),StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ResponseCache(Duration = 30, VaryByHeader = "Accept, Accept-Encoding", Location = ResponseCacheLocation.Any)] // vary by accept, accept-encoding because we don't want to give json data to someone who request data in xml.
     public async Task<IActionResult> Get([FromRoute] string idOrSlug, [FromServices] LinkGenerator linkGenerator,
         CancellationToken cancellationToken)
     {
@@ -81,6 +82,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     // it important to not expose domain object outside. and only use contracts. for request and response. Because contract are supposed to be fixed.
     [HttpGet(ApiEndpoints.V1.Movies.GetAll)]
     [ProducesResponseType(typeof(MoviesResponse),StatusCodes.Status200OK)]
+    [ResponseCache(Duration = 30, VaryByQueryKeys = ["title", "YearOfRelease", "SortBy", "Page", "PageSize"], VaryByHeader = "Accept, Accept-Encoding", Location = ResponseCacheLocation.Any)]
     public async Task<IActionResult> GetAll([FromQuery] GetAllMoviesRequest request,
         CancellationToken cancellationToken)
     {
@@ -126,7 +128,21 @@ public class MoviesController(IMovieService movieService) : ControllerBase
         return isDeleted ? Ok() : NotFound();
     }
 
+}
     /*
+     
+     response caching:
+        > Don't cache CREATE, UPDATE, DELETE methods.
+        > Only cache GET by id Or slug and GET-ALL
+   
+     > You have to be careful with response caching. we always need to specify the 'vary constraint'
+     like tell it should vary on which types/ query parameters and so on.
+     
+     > response cache is completely based on client and not on the server. if they don't want to use cached response they can say that.
+     > we don't control the cache here it is just instructions.
+        
+         
+     
      Why partial updates are bad ?
         Reason it is complex to build the PATCH request. and process the PATCH request.
         It is way simpler for the client to use GET request to get the Item they want to update. make changes in that and use PUT to update it.
@@ -153,4 +169,3 @@ public class MoviesController(IMovieService movieService) : ControllerBase
 
         It is way complicated to create in client and also complicated to process in server side. Hence we won't use PATCH
     */
-}

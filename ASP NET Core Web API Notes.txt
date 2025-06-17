@@ -287,6 +287,24 @@
 
 
 
+- Cacheable.
+> one of the main constrainst of REST API is Cacheable constrainst
+> Cache-Control = public,max-age=60,s-maxage=60
+> In response header 'cache-control' it is part of Cacheable aspect in REST api.
+> It lets Client know how long should they cache particular item for. or if they should cache or not cache.
+> It tells client to cache for specified time. in cache-control unless the 'ETag' header changes in case of github request.
+> If ETag changes then there is a Difference in the body of new response and it should be fetched from the server.
+> we could also specify things like No-cache to tell the client to not to cache.
+> Here we are refering to response caching not the output chaching
+
+> Response caching It stops client from sending traffic to the server if something has not changed.
+> based on cache-control and ETag value .
+
+
+
+
+
+
 
 
 

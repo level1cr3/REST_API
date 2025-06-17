@@ -119,6 +119,10 @@ builder.Services.AddSwaggerGen(option =>
 // custom health check is not recommended. instead i'm gonna use the library for it. AspNetCore.HealthChecks.
 builder.Services.AddHealthChecks().AddNpgSql(dbConnection);
 
+
+// caching
+builder.Services.AddResponseCaching();
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
@@ -153,6 +157,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// app.UseCors(); // don't put this below response caching.
+app.UseResponseCaching();
 
 app.MapControllers();
 
