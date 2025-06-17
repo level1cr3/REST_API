@@ -1,9 +1,12 @@
 using System.Text;
 using Asp.Versioning;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Movies.Api.Constants;
+using Movies.Api.Health;
 using Movies.Api.Middleware;
 using Movies.Api.Swagger;
 using Movies.Application;
@@ -96,7 +99,7 @@ builder.Services.AddApiVersioning(options =>
 
     // options.ApiVersionReader = new UrlSegmentApiVersionReader();
     // ai says to go with url segment. for versioning.
-}).AddMvc().AddApiExplorer();// this will mvc core that is needed by the package.
+}).AddMvc().AddApiExplorer();// this will add mvc core that is needed by the package.
 
 
 // add swagger
@@ -108,9 +111,28 @@ builder.Services.AddSwaggerGen(option =>
     option.OperationFilter<SwaggerDefaultValues>();
 });
 
+
+// health check
+// custom health check
+// builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>(DatabaseHealthCheck.Name);
+
+// custom health check is not recommended. instead i'm gonna use the library for it. AspNetCore.HealthChecks.
+builder.Services.AddHealthChecks().AddNpgSql(dbConnection);
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
+
+app.UseHttpsRedirection();
+
+// adding underscore to the endpoint so client knows this endpoint is only for metadata not official endpoint. 
+// every service should implement health check rest api, database and other service that you use.
+app.MapHealthChecks("_health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -128,7 +150,6 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
