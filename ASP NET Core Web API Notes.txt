@@ -287,18 +287,33 @@
 
 
 
-- Cacheable.
-> one of the main constrainst of REST API is Cacheable constrainst
-> Cache-Control = public,max-age=60,s-maxage=60
-> In response header 'cache-control' it is part of Cacheable aspect in REST api.
-> It lets Client know how long should they cache particular item for. or if they should cache or not cache.
-> It tells client to cache for specified time. in cache-control unless the 'ETag' header changes in case of github request.
-> If ETag changes then there is a Difference in the body of new response and it should be fetched from the server.
-> we could also specify things like No-cache to tell the client to not to cache.
-> Here we are refering to response caching not the output chaching
+- Cacheable
+    1 Response cache :
+        > one of the main constrainst of REST API is Cacheable constrainst
+        > Cache-Control = public,max-age=60,s-maxage=60
+        > In response header 'cache-control' it is part of Cacheable aspect in REST api.
+        > It lets Client know how long should they cache particular item for. or if they should cache or not cache.
+        > It tells client to cache for specified time. in cache-control unless the 'ETag' header changes in case of github request.
+        > If ETag changes then there is a Difference in the body of new response and it should be fetched from the server.
+        > we could also specify things like No-cache to tell the client to not to cache.
+        > Here we are refering to response caching not the output chaching
 
-> Response caching It stops client from sending traffic to the server if something has not changed.
-> based on cache-control and ETag value .
+        > Response caching It stops client from sending traffic to the server if something has not changed.
+        > based on cache-control and ETag value .
+
+    2 Output cache :
+        > Output caching caches just the output returned by api endpoint the raw data.
+        > It is purly on the server. Client has nothing to do with it. 
+        > Output caching have some defaults.
+            1 only 200 ok responses are cached. 
+            2 only GET and HEAD request are cached.                     // side note HEAD request only retrieves the headers, not the body of the response.
+
+            3 POST PUT DELETE are not cached.
+            4 response that set cookie are not cached.
+            5 reponses that authenticate the request are not cached. even if there is no [authorize] attribute. if user sends the authurize token in request it won't be cached.
+        > we can override these but Generally i think we shouldn't unless you have specific requirement for them
+        > It does the caching In-memory. not does distributed caching
+
 
 
 

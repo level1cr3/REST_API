@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Movies.Api.Constants;
 using Movies.Api.Extensions;
 using Movies.Api.Mapping;
@@ -13,7 +14,7 @@ namespace Movies.Api.Controllers.V1;
 
 [ApiVersion(1.0)]
 [ApiController]
-public class MoviesController(IMovieService movieService) : ControllerBase
+public class MoviesController(IMovieService movieService, IOutputCacheStore outputCacheStore) : ControllerBase
 {
     [Authorize(AuthConstants.TrustedOrAdminUserPolicyName)]
     [HttpPost(ApiEndpoints.V1.Movies.Create)] // this way i don't have to use route attribute explicitly.
@@ -30,6 +31,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
         // for created method. it returns url in the response location header like this. and the object.
         // Location : /api/movies/01971155-a6a1-734f-88e7-f1718c848b49
 
+        await outputCacheStore.EvictByTagAsync("movies", cancellationToken);
         return isCreated ? CreatedAtAction(nameof(Get), new { idOrSlug = responseObj.Id }, responseObj) : BadRequest();
         // use CreatedAtAction() it is better then Created in terms of giving value to location header.
         // provides us with full contextual location of the item.
@@ -39,7 +41,8 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     [HttpGet(ApiEndpoints.V1.Movies.Get)] // method HTTPGET needs to be added for response cache.
     [ProducesResponseType(typeof(MovieResponse),StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ResponseCache(Duration = 30, VaryByHeader = "Accept, Accept-Encoding", Location = ResponseCacheLocation.Any)] // vary by accept, accept-encoding because we don't want to give json data to someone who request data in xml.
+    // [ResponseCache(Duration = 30, VaryByHeader = "Accept, Accept-Encoding", Location = ResponseCacheLocation.Any)] // vary by accept, accept-encoding because we don't want to give json data to someone who request data in xml.
+    [OutputCache(PolicyName = "MovieCache")]
     public async Task<IActionResult> Get([FromRoute] string idOrSlug, [FromServices] LinkGenerator linkGenerator,
         CancellationToken cancellationToken)
     {
@@ -82,7 +85,8 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     // it important to not expose domain object outside. and only use contracts. for request and response. Because contract are supposed to be fixed.
     [HttpGet(ApiEndpoints.V1.Movies.GetAll)]
     [ProducesResponseType(typeof(MoviesResponse),StatusCodes.Status200OK)]
-    [ResponseCache(Duration = 30, VaryByQueryKeys = ["title", "YearOfRelease", "SortBy", "Page", "PageSize"], VaryByHeader = "Accept, Accept-Encoding", Location = ResponseCacheLocation.Any)]
+    // [ResponseCache(Duration = 30, VaryByQueryKeys = ["title", "YearOfRelease", "SortBy", "Page", "PageSize"], VaryByHeader = "Accept, Accept-Encoding", Location = ResponseCacheLocation.Any)]
+    [OutputCache(PolicyName = "MovieCache")]
     public async Task<IActionResult> GetAll([FromQuery] GetAllMoviesRequest request,
         CancellationToken cancellationToken)
     {
@@ -115,6 +119,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
         }
 
         var response = updatedMovie.MapToMovieResponse();
+        await outputCacheStore.EvictByTagAsync("movies", cancellationToken);
         return Ok(response);
     }
 
@@ -125,6 +130,7 @@ public class MoviesController(IMovieService movieService) : ControllerBase
     public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var isDeleted = await movieService.DeleteByIdAsync(id, cancellationToken);
+        await outputCacheStore.EvictByTagAsync("movies", cancellationToken);
         return isDeleted ? Ok() : NotFound();
     }
 

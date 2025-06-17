@@ -121,7 +121,32 @@ builder.Services.AddHealthChecks().AddNpgSql(dbConnection);
 
 
 // caching
-builder.Services.AddResponseCaching();
+// builder.Services.AddResponseCaching();
+builder.Services.AddOutputCache(options =>
+{
+    
+    // it says by default if i use [outputcache] for caching cache the response.
+    options.AddBasePolicy(policyBuilder => 
+        policyBuilder.Cache().Expire(TimeSpan.FromMinutes(1)));
+    
+    
+    options.AddPolicy("MovieCache", policyBuilder =>
+    {
+        policyBuilder.Cache()
+            .Expire(TimeSpan.FromMinutes(1))
+            .SetVaryByQuery(["title", "YearOfRelease", "SortBy", "Page", "PageSize"])
+            .Tag("movies");
+        
+        // each combination of query parameter are cached independently.
+    });
+    
+    
+    
+});
+
+
+
+
 
 var app = builder.Build();
 
@@ -158,8 +183,9 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
-// app.UseCors(); // don't put this below response caching.
-app.UseResponseCaching();
+// app.UseCors(); // don't put this below response caching or output cache.
+// app.UseResponseCaching();
+app.UseOutputCache();
 
 app.MapControllers();
 
