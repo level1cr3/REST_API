@@ -17,9 +17,10 @@ namespace Movies.Api.Controllers.V1;
 [ApiController]
 public class MoviesController(IMovieService movieService, IOutputCacheStore outputCacheStore) : ControllerBase
 {
-    // [Authorize(AuthConstants.TrustedOrAdminUserPolicyName)]
+    [Authorize(AuthConstants.TrustedOrAdminUserPolicyName)]
     // [ServiceFilter(typeof(ApiAuthKeyFilter))] //older
-    [ServiceFilter<ApiAuthKeyFilter>] // new from C# 11+
+    // [ServiceFilter<ApiAuthKeyFilter>] // new from C# 11+
+    
     [HttpPost(ApiEndpoints.V1.Movies.Create)] // this way i don't have to use route attribute explicitly.
     [ProducesResponseType(typeof(MovieResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
