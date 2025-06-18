@@ -315,6 +315,11 @@
         > It does the caching In-memory. not does distributed caching
 
 
+- Api Key based authentication
+> It is normal for services that talk to each other to not go down the normal JWT token authorization path.
+> They Rather have a Key that both services agree on. That service will send that key with the request and It can bypass the basic authentication like the JWT authentication.
+> we pass the Api Key in "x-api-key" header
+
 
 
 

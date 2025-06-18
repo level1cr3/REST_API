@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Movies.Api.Constants;
+using Movies.Api.Filters;
 using Movies.Api.Health;
 using Movies.Api.Middleware;
 using Movies.Api.Swagger;
@@ -146,7 +147,9 @@ builder.Services.AddOutputCache(options =>
 
 
 
+// api key based auth.
 
+builder.Services.AddScoped<ApiAuthKeyFilter>();
 
 var app = builder.Build();
 
