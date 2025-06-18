@@ -132,6 +132,9 @@ public class MoviesController(IMovieService movieService, IOutputCacheStore outp
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken)
     {
+        // test multi auth.
+        var userId = HttpContext.GetUserId();
+        
         var isDeleted = await movieService.DeleteByIdAsync(id, cancellationToken);
         await outputCacheStore.EvictByTagAsync("movies", cancellationToken);
         return isDeleted ? Ok() : NotFound();

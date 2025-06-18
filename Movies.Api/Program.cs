@@ -2,9 +2,11 @@ using System.Text;
 using Asp.Versioning;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Movies.Api.Auth;
 using Movies.Api.Constants;
 using Movies.Api.Filters;
 using Movies.Api.Health;
@@ -50,8 +52,16 @@ builder.Services.AddAuthentication(option =>
 
 builder.Services.AddAuthorization(option =>
 {
-    option.AddPolicy(AuthConstants.AdminUserPolicyName,
-        policy => policy.RequireClaim(AuthConstants.AdminUserClaimName, "true"));
+    // option.AddPolicy(AuthConstants.AdminUserPolicyName,
+    //     policy => policy.RequireClaim(AuthConstants.AdminUserClaimName, "true"));
+    
+    // multiple auth.
+    option.AddPolicy(AuthConstants.AdminUserPolicyName, policy =>
+    {
+        var apikey = builder.Configuration["ApiKey"]!;
+        policy.Requirements.Add(new AdminAuthRequirement(apikey));
+    });
+    
 
     option.AddPolicy(AuthConstants.TrustedOrAdminUserPolicyName, policy => policy.RequireAssertion(context =>
         context.User.HasClaim(AuthConstants.TrustedUserClaimName, "true") ||
@@ -68,6 +78,9 @@ builder.Services.AddAuthorization(option =>
     */
     
 });
+
+builder.Services.AddScoped<IAuthorizationHandler, AdminAuthHandler>();
+
 
 
 // builder.Services.AddSingleton<IMovieRepository,MovieRepository>();
