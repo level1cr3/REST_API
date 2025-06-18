@@ -1,13 +1,32 @@
 ﻿using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Movies.Contracts.Requests.V1;
 using Movies.Sdk;
 using Refit;
 
-var moviesApi = RestService.For<IMoviesApi>("https://localhost:5001");
+// var moviesApi = RestService.For<IMoviesApi>("https://localhost:5001");
 
 // var movie = moviesApi.GetMovieAsync("the-clean-greek-2024");
 
 // Console.WriteLine(JsonSerializer.Serialize(movie));
+
+
+// installed dependency injection package and refit http client factory
+var services = new ServiceCollection();
+
+services.AddRefitClient<IMoviesApi>().ConfigureHttpClient(options =>
+{
+    options.BaseAddress = new Uri("https://localhost:5001");
+}); 
+
+// we can configure httpclient and any of the handler here as well.
+// this will take care of handling httpclient with httpclient factory.
+
+
+
+var provider = services.BuildServiceProvider();
+
+var moviesApi = provider.GetRequiredService<IMoviesApi>();
 
 var getAllMoviesRequest = new GetAllMoviesRequest
 {
