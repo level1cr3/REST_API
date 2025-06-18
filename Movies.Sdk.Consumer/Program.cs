@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Movies.Contracts.Requests.V1;
 using Movies.Sdk;
+using Movies.Sdk.Consumer;
 using Refit;
 
 // var moviesApi = RestService.For<IMoviesApi>("https://localhost:5001");
@@ -10,15 +11,13 @@ using Refit;
 // installed dependency injection package and refit http client factory
 var services = new ServiceCollection();
 
-services.AddRefitClient<IMoviesApi>(options => new RefitSettings
+services.AddHttpClient();
+services.AddSingleton<AuthTokenProvider>();
+
+services.AddRefitClient<IMoviesApi>(serviceProvider => new RefitSettings
     {
-        AuthorizationHeaderValueGetter = delegate
-        {
-            return Task.FromResult(
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyOGEwNjdlOS0yODgyLTRlMjMtYWE1OS00YmYyM2ZlOTM3ZjgiLCJzdWIiOiJuaWNrQG5pY2tjaGFwc2FzLmNvbSIsImVtYWlsIjoibmlja0BuaWNrY2hhcHNhcy5jb20iLCJ1c2VyaWQiOiJkODU2NmRlMy1iMWE2LTRhOWItYjg0Mi04ZTM4ODdhODJlNDEiLCJhZG1pbiI6dHJ1ZSwidHJ1c3RlZF9tZW1iZXIiOnRydWUsIm5iZiI6MTc1MDIzOTc2NiwiZXhwIjoxNzUwMjY4NTY2LCJpYXQiOjE3NTAyMzk3NjYsImlzcyI6Imh0dHBzOi8veW9nZXNoLmRvdG5ldC5jb20iLCJhdWQiOiJodHRwczovL3lvZ2VzaC5yZWFjdC5jb20ifQ.z7rytgEDwVQ2IsjR_wNMlN9uvN4D5KpEZ-TCxRRlCJQ");
-        }
-    })
-    .ConfigureHttpClient(options => { options.BaseAddress = new Uri("https://localhost:5001"); });
+        AuthorizationHeaderValueGetter = async (HttpRequestMessage message, CancellationToken token) => await serviceProvider.GetRequiredService<AuthTokenProvider>().GetTokenAsync() 
+    }).ConfigureHttpClient(options => { options.BaseAddress = new Uri("https://localhost:5001"); });
 
 // we can configure httpclient and any of the handler here as well.
 // this will take care of handling httpclient with httpclient factory.

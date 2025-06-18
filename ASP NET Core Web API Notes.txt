@@ -321,7 +321,8 @@
 > we pass the Api Key in "x-api-key" header
 
 
-
+- How we generate our token needs to be adapted based on our identity system
+> This is just one of the way.
 
 
 
